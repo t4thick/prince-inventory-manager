@@ -1,5 +1,14 @@
 export type PaymentMethod = 'cash' | 'card' | 'transfer'
 
+export type UserRole = 'owner' | 'worker'
+
+export type Profile = {
+  id: string
+  displayName: string
+  role: UserRole
+  createdAt: string
+}
+
 export type Product = {
   id: string
   name: string
@@ -24,11 +33,17 @@ export type Sale = {
   total: number
   paymentMethod: PaymentMethod
   createdAt: string
+  workerId: string | null
+  workerName: string
+  customerName: string
+  vehicleInfo: string
+  voidedAt: string | null
+  voidedBy: string | null
 }
 
-export type ShopState = {
-  products: Product[]
-  sales: Sale[]
+export type CheckoutDetails = {
+  customerName: string
+  vehicleInfo: string
 }
 
 export type CartLine = {

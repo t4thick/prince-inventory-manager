@@ -31,7 +31,7 @@ function toDraft(product: Product): Draft {
 }
 
 export function StockView() {
-  const { products, addProduct, updateProduct, adjustStock, deleteProduct } = useShop()
+  const { products, addProduct, updateProduct, adjustStock, deleteProduct, isOwner } = useShop()
   const [query, setQuery] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
@@ -52,12 +52,14 @@ export function StockView() {
   }, [products, query])
 
   function openCreate() {
+    if (!isOwner) return
     setEditingId(null)
     setDraft(emptyDraft)
     setOpen(true)
   }
 
   function openEdit(product: Product) {
+    if (!isOwner) return
     setEditingId(product.id)
     setDraft(toDraft(product))
     setOpen(true)
@@ -94,11 +96,17 @@ export function StockView() {
           <p className="eyebrow">Parts shelf</p>
           <h1>Parts</h1>
         </div>
-        <button type="button" className="primary-btn" onClick={openCreate}>
-          <PackagePlus size={18} aria-hidden />
-          Add part / labor
-        </button>
+        {isOwner && (
+          <button type="button" className="primary-btn" onClick={openCreate}>
+            <PackagePlus size={18} aria-hidden />
+            Add part / labor
+          </button>
+        )}
       </header>
+
+      {!isOwner && (
+        <p className="role-note panel">Workers can adjust stock counts. Only the owner can add, edit, or remove parts.</p>
+      )}
 
       <div className="search-row panel-search">
         <Search size={18} aria-hidden />
@@ -152,27 +160,25 @@ export function StockView() {
                   </>
                 )}
               </div>
-              <div className="stock-actions">
-                <button
-                  type="button"
-                  className="ghost-btn"
-                  onClick={() => openEdit(product)}
-                >
-                  <Pencil size={16} aria-hidden />
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  className="ghost-btn danger"
-                  onClick={() => {
-                    if (confirm(`Remove ${product.name} from inventory?`)) {
-                      deleteProduct(product.id)
-                    }
-                  }}
-                >
-                  <Trash2 size={16} aria-hidden />
-                </button>
-              </div>
+              {isOwner && (
+                <div className="stock-actions">
+                  <button type="button" className="ghost-btn" onClick={() => openEdit(product)}>
+                    <Pencil size={16} aria-hidden />
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost-btn danger"
+                    onClick={() => {
+                      if (confirm(`Remove ${product.name} from inventory?`)) {
+                        deleteProduct(product.id)
+                      }
+                    }}
+                  >
+                    <Trash2 size={16} aria-hidden />
+                  </button>
+                </div>
+              )}
             </li>
           )
         })}
@@ -181,7 +187,7 @@ export function StockView() {
         )}
       </ul>
 
-      {open && (
+      {open && isOwner && (
         <div className="modal-backdrop" role="presentation" onClick={closeForm}>
           <form
             className="modal panel"

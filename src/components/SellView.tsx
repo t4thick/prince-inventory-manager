@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Banknote, CreditCard, Minus, Plus, Search, Smartphone, Trash2 } from 'lucide-react'
 import { money } from '../lib/format'
+import { isOnline } from '../lib/offline'
 import { useShop } from '../store'
-import type { CartLine, PaymentMethod } from '../types'
-import { TodayStrip } from './TodayStrip'
+import type { CartLine, PaymentMethod, Sale } from '../types'
+import { ReceiptModal } from './ReceiptModal'
 
 const methods: { id: PaymentMethod; label: string; icon: typeof Banknote }[] = [
   { id: 'cash', label: 'Cash', icon: Banknote },
@@ -12,11 +13,15 @@ const methods: { id: PaymentMethod; label: string; icon: typeof Banknote }[] = [
 ]
 
 export function SellView() {
-  const { products, checkout } = useShop()
+  const { products, checkout, offlinePending } = useShop()
   const [query, setQuery] = useState('')
   const [cart, setCart] = useState<CartLine[]>([])
   const [method, setMethod] = useState<PaymentMethod>('cash')
+  const [customerName, setCustomerName] = useState('')
+  const [vehicleInfo, setVehicleInfo] = useState('')
   const [flash, setFlash] = useState<string | null>(null)
+  const [receipt, setReceipt] = useState<Sale | null>(null)
+  const [paying, setPaying] = useState(false)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -44,17 +49,19 @@ export function SellView() {
 
   useEffect(() => {
     if (!flash) return
-    const t = window.setTimeout(() => setFlash(null), 2200)
+    const t = window.setTimeout(() => setFlash(null), 3200)
     return () => window.clearTimeout(t)
   }, [flash])
 
   function addToCart(productId: string) {
     const product = products.find((p) => p.id === productId)
-    if (!product || product.stock <= 0) return
+    if (!product) return
+    const isLabor = product.sku.startsWith('SVC-')
+    if (!isLabor && product.stock <= 0) return
     setCart((prev) => {
       const existing = prev.find((l) => l.productId === productId)
       if (existing) {
-        if (existing.qty >= product.stock) return prev
+        if (!isLabor && existing.qty >= product.stock) return prev
         return prev.map((l) =>
           l.productId === productId ? { ...l, qty: l.qty + 1 } : l,
         )
@@ -66,19 +73,32 @@ export function SellView() {
   function setQty(productId: string, qty: number) {
     const product = products.find((p) => p.id === productId)
     if (!product) return
-    const next = Math.max(0, Math.min(qty, product.stock))
+    const isLabor = product.sku.startsWith('SVC-')
+    const max = isLabor ? 99 : product.stock
+    const next = Math.max(0, Math.min(qty, max))
     setCart((prev) => {
       if (next === 0) return prev.filter((l) => l.productId !== productId)
       return prev.map((l) => (l.productId === productId ? { ...l, qty: next } : l))
     })
   }
 
-  function takePayment() {
-    if (detailed.length === 0) return
-    const sale = checkout(cart, method)
+  async function takePayment() {
+    if (detailed.length === 0 || paying) return
+    setPaying(true)
+    const sale = await checkout(cart, method, { customerName, vehicleInfo })
+    setPaying(false)
     if (!sale) return
+
     setCart([])
-    setFlash(`Paid ${money(sale.total)} · parts updated`)
+    setCustomerName('')
+    setVehicleInfo('')
+    setReceipt(sale)
+
+    if (!isOnline()) {
+      setFlash(`Saved offline (${offlinePending + 1} pending) · will sync when back online`)
+    } else {
+      setFlash(`Paid ${money(sale.total)} · parts updated`)
+    }
   }
 
   return (
@@ -88,8 +108,13 @@ export function SellView() {
           <p className="eyebrow">Front desk</p>
           <h1>Checkout</h1>
         </div>
-        <TodayStrip />
       </header>
+
+      {!isOnline() && (
+        <p className="offline-banner" role="status">
+          Offline mode — sales queue locally and sync when connection returns.
+        </p>
+      )}
 
       <div className="sell-grid">
         <section className="catalog panel" aria-label="Parts and labor">
@@ -138,6 +163,25 @@ export function SellView() {
             <span>{itemCount} line items</span>
           </div>
 
+          <div className="job-fields">
+            <label>
+              Customer
+              <input
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Name (optional)"
+              />
+            </label>
+            <label>
+              Vehicle
+              <input
+                value={vehicleInfo}
+                onChange={(e) => setVehicleInfo(e.target.value)}
+                placeholder="Year / make / plate (optional)"
+              />
+            </label>
+          </div>
+
           <ul className="cart-lines">
             {detailed.map((line) => (
               <li key={line.productId}>
@@ -160,7 +204,9 @@ export function SellView() {
                     className="icon-btn"
                     aria-label="Increase"
                     onClick={() => setQty(line.productId, line.qty + 1)}
-                    disabled={line.qty >= line.product.stock}
+                    disabled={
+                      !line.product.sku.startsWith('SVC-') && line.qty >= line.product.stock
+                    }
                   >
                     <Plus size={16} />
                   </button>
@@ -202,10 +248,10 @@ export function SellView() {
           <button
             type="button"
             className="primary-btn take-pay"
-            disabled={detailed.length === 0}
+            disabled={detailed.length === 0 || paying}
             onClick={takePayment}
           >
-            Take payment
+            {paying ? 'Processing…' : 'Take payment'}
           </button>
 
           {flash && (
@@ -215,6 +261,8 @@ export function SellView() {
           )}
         </aside>
       </div>
+
+      {receipt && <ReceiptModal sale={receipt} onClose={() => setReceipt(null)} />}
     </div>
   )
 }
