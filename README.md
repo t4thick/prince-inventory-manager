@@ -46,6 +46,19 @@ https://prince-inventory-manager.vercel.app
 - **PWA** — Add to Home Screen on iPhone/Android (standalone app feel)
 - **Offline** — sales queue locally when connection drops, sync when back
 
-## iOS / App Store path
+## iPhone (PWA + optional Xcode wrapper)
 
-The app is built mobile-first as a **PWA** today. For App Store later, wrap this same codebase with **Capacitor** — no rewrite needed.
+**Fastest:** Safari → [prince-inventory-manager.vercel.app](https://prince-inventory-manager.vercel.app) → Share → **Add to Home Screen**. The app opens full-screen like a native app.
+
+Safari visitors see an in-app install guide. Full steps: [`docs/IPHONE.md`](docs/IPHONE.md).
+
+**Xcode wrapper (optional):** Capacitor is configured (`capacitor.config.ts`). On a Mac with Xcode and CocoaPods:
+
+```bash
+npm run ios:sync
+npm run ios:open
+```
+
+## Native Swift vs this app
+
+A full Swift/SwiftUI rebuild would be a separate project. This codebase is React + Supabase + PWA — suitable for your shop today and expandable (suppliers, POs, barcode via camera, etc.) without rewriting in Swift.

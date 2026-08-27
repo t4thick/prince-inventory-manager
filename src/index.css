@@ -1,22 +1,25 @@
 :root {
-  --bg: #f3f5f8;
+  --bg: #f4f5f7;
   --surface: #ffffff;
-  --sidebar: #16202e;
-  --sidebar-soft: #1e2a3a;
-  --ink: #1a2532;
-  --muted: #5c6b7c;
-  --line: #e4e9ef;
-  --teal: #1f8a70;
-  --teal-deep: #14705a;
-  --teal-soft: rgba(31, 138, 112, 0.12);
-  --blue: #2f6fed;
-  --blue-soft: rgba(47, 111, 237, 0.12);
-  --green: #1f9d55;
-  --green-soft: rgba(31, 157, 85, 0.12);
-  --orange: #d97a1f;
-  --orange-soft: rgba(217, 122, 31, 0.14);
-  --red: #d23c2a;
-  --red-soft: rgba(210, 60, 42, 0.1);
+  --sidebar: #1c2430;
+  --sidebar-soft: #252f3d;
+  --ink: #111827;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --accent: #dc2626;
+  --accent-deep: #b91c1c;
+  --accent-soft: rgba(220, 38, 38, 0.1);
+  --teal: var(--accent);
+  --teal-deep: var(--accent-deep);
+  --teal-soft: var(--accent-soft);
+  --blue: #2563eb;
+  --blue-soft: rgba(37, 99, 235, 0.1);
+  --green: #16a34a;
+  --green-soft: rgba(22, 163, 74, 0.1);
+  --orange: #ea580c;
+  --orange-soft: rgba(234, 88, 12, 0.12);
+  --red: #dc2626;
+  --red-soft: rgba(220, 38, 38, 0.1);
   --shadow: 0 1px 2px rgba(22, 32, 46, 0.05), 0 4px 16px rgba(22, 32, 46, 0.06);
   --radius: 12px;
   --font: 'Inter', system-ui, -apple-system, sans-serif;
@@ -72,8 +75,8 @@ input {
 }
 
 input:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px var(--teal-soft);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 /* ---------- App frame ---------- */
@@ -124,7 +127,7 @@ input:focus {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 0.82rem;
-  color: var(--teal);
+  color: #fca5a5;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -157,7 +160,7 @@ input:focus {
 }
 
 .side-link.active {
-  background: var(--teal);
+  background: var(--accent);
   color: #fff;
 }
 
@@ -256,7 +259,7 @@ input:focus {
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: var(--teal);
+  background: var(--accent);
   color: #fff;
   font-weight: 700;
   font-size: 0.85rem;
@@ -285,8 +288,8 @@ input:focus {
 }
 
 .role-pill.owner {
-  background: var(--teal-soft);
-  color: var(--teal-deep);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
 }
 
 .sign-out {
@@ -391,7 +394,7 @@ input:focus {
 .link-btn {
   border: 0;
   background: transparent;
-  color: var(--teal-deep);
+  color: var(--accent-deep);
   font-weight: 700;
   font-size: 0.85rem;
   padding: 0.2rem 0.3rem;
@@ -399,7 +402,7 @@ input:focus {
 }
 
 .link-btn:hover {
-  background: var(--teal-soft);
+  background: var(--accent-soft);
 }
 
 /* ---------- KPI cards ---------- */
@@ -425,7 +428,7 @@ input:focus {
 
 button.kpi-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(31, 138, 112, 0.4);
+  border-color: rgba(220, 38, 38, 0.35);
 }
 
 .kpi-card.kpi-alert {
@@ -452,8 +455,8 @@ button.kpi-card:hover {
 }
 
 .kpi-icon.is-teal {
-  background: var(--teal-soft);
-  color: var(--teal-deep);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
 }
 
 .kpi-icon.is-red {
@@ -531,7 +534,7 @@ button.kpi-card:hover {
 }
 
 .bar.is-today {
-  background: var(--teal);
+  background: var(--accent);
 }
 
 .bar-value {
@@ -703,8 +706,8 @@ button.kpi-card:hover {
   display: grid;
   place-items: center;
   border-radius: 6px;
-  background: var(--teal-soft);
-  color: var(--teal-deep);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
   font-size: 0.75rem;
   font-weight: 800;
 }
@@ -910,9 +913,9 @@ button.kpi-card:hover {
 }
 
 .search-row:focus-within {
-  border-color: var(--teal);
+  border-color: var(--accent);
   background: var(--surface);
-  box-shadow: 0 0 0 3px var(--teal-soft);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .search-row input {
@@ -950,13 +953,13 @@ button.kpi-card:hover {
 
 .product-tile:hover:not(:disabled) {
   transform: translateY(-2px);
-  border-color: var(--teal);
+  border-color: var(--accent);
   box-shadow: 0 6px 18px rgba(22, 32, 46, 0.1);
 }
 
 .product-tile.in-cart {
-  border-color: var(--teal);
-  box-shadow: inset 0 0 0 1px var(--teal);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .product-tile.is-out {
@@ -1140,16 +1143,16 @@ button.kpi-card:hover {
   justify-content: center;
   gap: 0.45rem;
   padding: 0.7rem 1.05rem;
-  background: var(--teal);
+  background: var(--accent);
   color: #fff;
   font-weight: 700;
   font-size: 0.92rem;
   letter-spacing: -0.01em;
-  box-shadow: 0 1px 3px rgba(20, 112, 90, 0.4);
+  box-shadow: 0 1px 3px rgba(185, 28, 28, 0.35);
 }
 
 .primary-btn:hover:not(:disabled) {
-  background: var(--teal-deep);
+  background: var(--accent-deep);
   transform: translateY(-1px);
 }
 
@@ -1181,14 +1184,14 @@ button.kpi-card:hover {
 }
 
 .method:hover {
-  border-color: var(--teal);
-  color: var(--teal-deep);
+  border-color: var(--accent);
+  color: var(--accent-deep);
 }
 
 .method.active {
-  background: var(--teal-soft);
-  color: var(--teal-deep);
-  border-color: var(--teal);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  border-color: var(--accent);
 }
 
 .cart-total {
@@ -1487,7 +1490,7 @@ button.kpi-card:hover {
   place-items: center;
   padding: 1.25rem;
   background:
-    radial-gradient(900px 500px at 85% -10%, rgba(31, 138, 112, 0.14), transparent 55%),
+    radial-gradient(900px 500px at 85% -10%, rgba(220, 38, 38, 0.18), transparent 55%),
     var(--sidebar);
 }
 
@@ -1581,8 +1584,8 @@ button.kpi-card:hover {
   margin: 0;
   padding: 0.65rem 0.75rem;
   border-radius: 9px;
-  background: var(--teal-soft);
-  color: var(--teal-deep);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
   font-size: 0.86rem;
 }
 
@@ -1623,8 +1626,8 @@ button.kpi-card:hover {
   width: 30px;
   height: 30px;
   border-radius: 999px;
-  border: 3px solid rgba(31, 138, 112, 0.25);
-  border-top-color: var(--teal);
+  border: 3px solid rgba(220, 38, 38, 0.2);
+  border-top-color: var(--accent);
   animation: spin 0.8s linear infinite;
 }
 
@@ -1658,7 +1661,7 @@ button.kpi-card:hover {
 
 .tab.active {
   color: #fff;
-  background: rgba(31, 138, 112, 0.3);
+  background: rgba(220, 38, 38, 0.35);
 }
 
 /* ---------- Animations ---------- */
@@ -1810,6 +1813,107 @@ button.kpi-card:hover {
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* ---------- iOS install prompt ---------- */
+
+.install-prompt {
+  position: fixed;
+  inset: auto 1rem calc(4.75rem + env(safe-area-inset-bottom)) 1rem;
+  z-index: 200;
+  padding: 1.15rem 1.15rem 1rem;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 40px rgba(17, 24, 39, 0.18);
+  animation: install-slide 0.35s ease;
+}
+
+@keyframes install-slide {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.install-dismiss {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--muted);
+}
+
+.install-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: 0.65rem;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.install-prompt h2 {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.install-prompt p {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.install-steps {
+  margin: 0 0 0.9rem;
+  padding-left: 1.15rem;
+  color: var(--ink);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.install-steps li + li {
+  margin-top: 0.35rem;
+}
+
+.install-steps .inline-icon {
+  display: inline;
+  vertical-align: -2px;
+  margin: 0 0.1rem;
+}
+
+.install-btn {
+  width: 100%;
+}
+
+@media (min-width: 901px) {
+  .install-prompt {
+    inset: auto auto 1.5rem 1.5rem;
+    max-width: 22rem;
+  }
+}
+
+@media (display-mode: standalone) {
+  .install-prompt {
+    display: none;
   }
 }
 

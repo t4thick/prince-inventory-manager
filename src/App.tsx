@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { InstallPrompt } from './components/InstallPrompt'
+import { shouldShowInstallPrompt } from './lib/pwa'
 import {
   BarChart3,
   ClipboardList,
@@ -29,11 +31,13 @@ const navItems: { id: Tab; label: string; icon: typeof Wrench }[] = [
 
 function Shell() {
   const [tab, setTab] = useState<Tab>('dashboard')
+  const [showInstall, setShowInstall] = useState(shouldShowInstallPrompt)
   const { profile, signOut } = useAuth()
   const { loading, error, offlinePending, clearError } = useShop()
 
   return (
     <div className="app-frame">
+      {showInstall && <InstallPrompt onClose={() => setShowInstall(false)} />}
       <aside className="sidebar" aria-label="Main navigation">
         <div className="sidebar-brand">
           <span className="brand-word">Prince</span>

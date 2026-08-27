@@ -7,26 +7,32 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons.svg'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.svg', 'icon-512.svg'],
       manifest: {
         name: 'Prince Auto',
         short_name: 'Prince Auto',
         description: 'Parts, labor, checkout & shared inventory for Prince Auto mechanic shop.',
-        theme_color: '#0C1B2A',
-        background_color: '#dce7ee',
+        theme_color: '#1c2430',
+        background_color: '#f4f5f7',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
         icons: [
           {
-            src: '/favicon.svg',
-            sizes: 'any',
+            src: '/apple-touch-icon.svg',
+            sizes: '180x180',
             type: 'image/svg+xml',
             purpose: 'any',
           },
           {
-            src: '/favicon.svg',
+            src: '/icon-512.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml',
+            purpose: 'any',
+          },
+          {
+            src: '/icon-512.svg',
             sizes: '512x512',
             type: 'image/svg+xml',
             purpose: 'maskable',

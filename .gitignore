@@ -24,3 +24,10 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Capacitor / Xcode user-specific
+ios/App/App/public
+ios/App/Pods
+ios/DerivedData
+*.xcuserstate
+xcuserdata/
