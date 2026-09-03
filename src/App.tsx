@@ -17,6 +17,7 @@ import { DashboardView } from './components/DashboardView'
 import { CreditView } from './components/CreditView'
 import { LoginView } from './components/LoginView'
 import { MoreView } from './components/MoreView'
+import { PwaUpdatePrompt } from './components/PwaUpdatePrompt'
 import { ReportsView } from './components/ReportsView'
 import { SalesView } from './components/SalesView'
 import { SellView } from './components/SellView'
@@ -197,8 +198,11 @@ function AppGate() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppGate />
-    </AuthProvider>
+    <>
+      <PwaUpdatePrompt />
+      <AuthProvider>
+        <AppGate />
+      </AuthProvider>
+    </>
   )
 }
