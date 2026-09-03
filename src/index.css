@@ -1621,6 +1621,72 @@ button.kpi-card:hover {
   font-weight: 700;
 }
 
+.balance-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.statement-modal {
+  width: min(760px, calc(100vw - 2rem));
+}
+
+.statement-sheet {
+  padding: 1.25rem;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.statement-head,
+.statement-customer,
+.statement-summary,
+.statement-payment-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.statement-head > div,
+.statement-customer {
+  flex-direction: column;
+}
+
+.statement-head span,
+.statement-customer span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.statement-customer {
+  margin: 1.25rem 0;
+}
+
+.statement-summary {
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  background: var(--orange-soft);
+}
+
+.statement-summary strong {
+  color: var(--orange);
+  font-size: 1.35rem;
+}
+
+.statement-sheet h3 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.statement-table-wrap { overflow-x: auto; }
+.statement-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.statement-table th, .statement-table td { padding: 0.55rem; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+.statement-table th { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; }
+.statement-payment-list { margin: 0; padding: 0; list-style: none; }
+.statement-payment-list li { padding: 0.5rem 0; border-bottom: 1px solid var(--line); }
+.statement-thanks { margin: 1.5rem 0 0; color: var(--muted); text-align: center; }
+
 /* ---------- Mobile more menu ---------- */
 
 .mobile-account {
@@ -2842,11 +2908,14 @@ button.kpi-card:hover {
   }
 
   #print-receipt,
-  #print-receipt * {
+  #print-receipt *,
+  #print-statement,
+  #print-statement * {
     visibility: visible;
   }
 
-  #print-receipt {
+  #print-receipt,
+  #print-statement {
     position: absolute;
     left: 0;
     top: 0;

@@ -13,6 +13,10 @@ type Draft = {
   taxRate: string
   isLabor: boolean
   barcode: string
+  category: string
+  brand: string
+  unit: string
+  shelfLocation: string
   stock: string
   lowStockAt: string
   sku: string
@@ -26,6 +30,10 @@ const emptyDraft: Draft = {
   taxRate: '20',
   isLabor: false,
   barcode: '',
+  category: '',
+  brand: '',
+  unit: 'Each',
+  shelfLocation: '',
   stock: '',
   lowStockAt: '5',
   sku: '',
@@ -40,6 +48,10 @@ function toDraft(product: Product): Draft {
     taxRate: String(product.taxRate * 100),
     isLabor: product.isLabor,
     barcode: product.barcode,
+    category: product.category,
+    brand: product.brand,
+    unit: product.unit,
+    shelfLocation: product.shelfLocation,
     stock: String(product.stock),
     lowStockAt: String(product.lowStockAt),
     sku: product.sku,
@@ -63,7 +75,8 @@ export function StockView() {
     })
     if (!q) return list
     return list.filter(
-      (p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q),
+      (p) => [p.name, p.sku, p.category, p.brand, p.shelfLocation]
+        .some((value) => value.toLowerCase().includes(q)),
     )
   }, [products, query])
 
@@ -117,6 +130,10 @@ export function StockView() {
         taxRate,
         isLabor: draft.isLabor,
         barcode: draft.barcode.trim(),
+        category: draft.category.trim(),
+        brand: draft.brand.trim(),
+        unit: draft.unit.trim() || 'Each',
+        shelfLocation: draft.shelfLocation.trim(),
         lowStockAt,
         sku,
       })
@@ -129,6 +146,10 @@ export function StockView() {
         taxRate,
         isLabor: draft.isLabor,
         barcode: draft.barcode.trim(),
+        category: draft.category.trim(),
+        brand: draft.brand.trim(),
+        unit: draft.unit.trim() || 'Each',
+        shelfLocation: draft.shelfLocation.trim(),
         stock: draft.isLabor ? 0 : stock,
         lowStockAt,
         sku,
@@ -161,7 +182,7 @@ export function StockView() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Find by name or part #"
+          placeholder="Find by name, part #, category, brand, or shelf"
           aria-label="Search parts"
         />
       </div>
@@ -177,6 +198,10 @@ export function StockView() {
                 <strong>{product.name}</strong>
                 <span className="meta">
                   {product.sku} · {money(product.price)}
+                  {product.brand ? ` · ${product.brand}` : ''}
+                  {product.category ? ` · ${product.category}` : ''}
+                  {product.unit ? ` · per ${product.unit.toLowerCase()}` : ''}
+                  {product.shelfLocation ? ` · Shelf ${product.shelfLocation}` : ''}
                   {isOwner ? ` · Cost ${money(product.costPrice)} · Profit ${money(product.price - product.costPrice)}` : ''}
                   {product.taxable ? ` · ${percent(product.taxRate)} tax` : ' · no tax'}
                   {isLabor ? ' · labor rate' : ''}
@@ -263,6 +288,46 @@ export function StockView() {
                   placeholder="e.g. Brake Pads (set)"
                 />
               </label>
+              <div className="form-row">
+                <label>
+                  Category
+                  <input
+                    value={draft.category}
+                    onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
+                    placeholder="e.g. Filters"
+                  />
+                </label>
+                <label>
+                  Brand
+                  <input
+                    value={draft.brand}
+                    onChange={(e) => setDraft((d) => ({ ...d, brand: e.target.value }))}
+                    placeholder="e.g. Bosch"
+                  />
+                </label>
+              </div>
+              <div className="form-row">
+                <label>
+                  Unit
+                  <select value={draft.unit} onChange={(e) => setDraft((d) => ({ ...d, unit: e.target.value }))}>
+                    <option>Each</option>
+                    <option>Box</option>
+                    <option>Pack</option>
+                    <option>Set</option>
+                    <option>Bottle</option>
+                    <option>Case</option>
+                    <option>Pair</option>
+                  </select>
+                </label>
+                <label>
+                  Shelf location
+                  <input
+                    value={draft.shelfLocation}
+                    onChange={(e) => setDraft((d) => ({ ...d, shelfLocation: e.target.value }))}
+                    placeholder="e.g. A3"
+                  />
+                </label>
+              </div>
               <div className="form-row">
                 <label>
                   Cost price

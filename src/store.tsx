@@ -17,14 +17,14 @@ import type {
 } from './types'
 
 const seedProducts: Product[] = [
-  { id: 'p_oil', name: 'Engine Oil 5W-30 (qt)', price: 8.99, costPrice: 5.5, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', stock: 32, lowStockAt: 8, sku: 'OIL-5W30', createdAt: '', updatedAt: '' },
-  { id: 'p_filter_oil', name: 'Oil Filter', price: 12.5, costPrice: 7, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', stock: 18, lowStockAt: 4, sku: 'FILT-OIL', createdAt: '', updatedAt: '' },
-  { id: 'p_brake', name: 'Brake Pads (set)', price: 45, costPrice: 26, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', stock: 8, lowStockAt: 2, sku: 'BRK-PAD', createdAt: '', updatedAt: '' },
-  { id: 'p_spark', name: 'Spark Plug', price: 6, costPrice: 3.25, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', stock: 24, lowStockAt: 6, sku: 'SPK-PLG', createdAt: '', updatedAt: '' },
-  { id: 'p_air', name: 'Air Filter', price: 18, costPrice: 10, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', stock: 5, lowStockAt: 3, sku: 'FILT-AIR', createdAt: '', updatedAt: '' },
-  { id: 'p_coolant', name: 'Coolant 1 gal', price: 22, costPrice: 13, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', stock: 10, lowStockAt: 3, sku: 'CLNT-1G', createdAt: '', updatedAt: '' },
-  { id: 'p_svc_oil', name: 'Labor — Oil Change', price: 49.99, costPrice: 0, taxable: false, taxRate: 0.2, isLabor: true, barcode: '', stock: 999, lowStockAt: 0, sku: 'SVC-OIL', createdAt: '', updatedAt: '' },
-  { id: 'p_svc_brake', name: 'Labor — Brake Service', price: 120, costPrice: 0, taxable: false, taxRate: 0.2, isLabor: true, barcode: '', stock: 999, lowStockAt: 0, sku: 'SVC-BRK', createdAt: '', updatedAt: '' },
+  { id: 'p_oil', name: 'Engine Oil 5W-30 (qt)', price: 8.99, costPrice: 5.5, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', category: 'Oils & fluids', brand: '', unit: 'Bottle', shelfLocation: '', stock: 32, lowStockAt: 8, sku: 'OIL-5W30', createdAt: '', updatedAt: '' },
+  { id: 'p_filter_oil', name: 'Oil Filter', price: 12.5, costPrice: 7, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', category: 'Filters', brand: '', unit: 'Each', shelfLocation: '', stock: 18, lowStockAt: 4, sku: 'FILT-OIL', createdAt: '', updatedAt: '' },
+  { id: 'p_brake', name: 'Brake Pads (set)', price: 45, costPrice: 26, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', category: 'Brakes', brand: '', unit: 'Set', shelfLocation: '', stock: 8, lowStockAt: 2, sku: 'BRK-PAD', createdAt: '', updatedAt: '' },
+  { id: 'p_spark', name: 'Spark Plug', price: 6, costPrice: 3.25, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', category: 'Ignition', brand: '', unit: 'Each', shelfLocation: '', stock: 24, lowStockAt: 6, sku: 'SPK-PLG', createdAt: '', updatedAt: '' },
+  { id: 'p_air', name: 'Air Filter', price: 18, costPrice: 10, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', category: 'Filters', brand: '', unit: 'Each', shelfLocation: '', stock: 5, lowStockAt: 3, sku: 'FILT-AIR', createdAt: '', updatedAt: '' },
+  { id: 'p_coolant', name: 'Coolant 1 gal', price: 22, costPrice: 13, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', category: 'Oils & fluids', brand: '', unit: 'Bottle', shelfLocation: '', stock: 10, lowStockAt: 3, sku: 'CLNT-1G', createdAt: '', updatedAt: '' },
+  { id: 'p_svc_oil', name: 'Service item', price: 49.99, costPrice: 0, taxable: false, taxRate: 0.2, isLabor: true, barcode: '', category: 'Services', brand: '', unit: 'Service', shelfLocation: '', stock: 999, lowStockAt: 0, sku: 'SVC-OIL', createdAt: '', updatedAt: '' },
+  { id: 'p_svc_brake', name: 'Service item', price: 120, costPrice: 0, taxable: false, taxRate: 0.2, isLabor: true, barcode: '', category: 'Services', brand: '', unit: 'Service', shelfLocation: '', stock: 999, lowStockAt: 0, sku: 'SVC-BRK', createdAt: '', updatedAt: '' },
 ]
 
 type ProductRow = {
@@ -35,6 +35,10 @@ type ProductRow = {
   tax_rate?: number | string
   is_labor?: boolean
   barcode?: string | null
+  category?: string | null
+  brand?: string | null
+  unit?: string | null
+  shelf_location?: string | null
   stock: number
   low_stock_at: number
   sku: string
@@ -106,6 +110,10 @@ function productFromRow(row: ProductRow, costPrice = 0): Product {
     taxRate: Number(row.tax_rate ?? 0.2),
     isLabor: row.is_labor ?? row.sku.startsWith('SVC-'),
     barcode: row.barcode ?? '',
+    category: row.category ?? '',
+    brand: row.brand ?? '',
+    unit: row.unit ?? 'Each',
+    shelfLocation: row.shelf_location ?? '',
     stock: row.stock,
     lowStockAt: row.low_stock_at,
     sku: row.sku,
@@ -123,6 +131,10 @@ function productToRow(product: Product): ProductRow {
     tax_rate: product.taxRate,
     is_labor: product.isLabor,
     barcode: product.barcode || null,
+    category: product.category || null,
+    brand: product.brand || null,
+    unit: product.unit || 'Each',
+    shelf_location: product.shelfLocation || null,
     stock: product.stock,
     low_stock_at: product.lowStockAt,
     sku: product.sku,
@@ -564,6 +576,10 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         if (patch.taxRate !== undefined) row.tax_rate = patch.taxRate
         if (patch.isLabor !== undefined) row.is_labor = patch.isLabor
         if (patch.barcode !== undefined) row.barcode = patch.barcode || null
+        if (patch.category !== undefined) row.category = patch.category || null
+        if (patch.brand !== undefined) row.brand = patch.brand || null
+        if (patch.unit !== undefined) row.unit = patch.unit || 'Each'
+        if (patch.shelfLocation !== undefined) row.shelf_location = patch.shelfLocation || null
         void supabase?.from('products').update(row).eq('id', id).then(({ error: err }) => {
           if (err) {
             setError(err.message)

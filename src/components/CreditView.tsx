@@ -1,18 +1,35 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { Banknote, Search, WalletCards, X } from 'lucide-react'
+import { Banknote, FileText, Printer, Search, WalletCards, X } from 'lucide-react'
 import { formatDateTime, money } from '../lib/format'
 import { useShop } from '../store'
 import type { CollectedPaymentMethod, Sale } from '../types'
 import { ModalPortal } from './ModalPortal'
 
 export function CreditView() {
-  const { sales, recordPayment } = useShop()
+  const { sales, payments, recordPayment } = useShop()
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<Sale | null>(null)
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState<CollectedPaymentMethod>('cash')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
+  const [statementSale, setStatementSale] = useState<Sale | null>(null)
+
+  const statementSales = useMemo(() => {
+    if (!statementSale) return []
+    return sales
+      .filter((sale) => !sale.voidedAt && (
+        statementSale.customerId
+          ? sale.customerId === statementSale.customerId
+          : sale.customerName === statementSale.customerName && sale.customerPhone === statementSale.customerPhone
+      ))
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+  }, [sales, statementSale])
+  const statementSaleIds = useMemo(() => new Set(statementSales.map((sale) => sale.id)), [statementSales])
+  const statementPayments = payments
+    .filter((payment) => !payment.reversedAt && statementSaleIds.has(payment.saleId))
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+  const statementBalance = statementSales.reduce((sum, sale) => sum + sale.balanceDue, 0)
 
   const balances = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -100,7 +117,7 @@ export function CreditView() {
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search name, phone, vehicle, or receipt"
+          placeholder="Search customer, phone, or receipt"
           aria-label="Search customer balances"
         />
       </div>
@@ -135,9 +152,14 @@ export function CreditView() {
                     {isOverdue ? 'Overdue' : sale.paymentStatus === 'partial' ? 'Partially paid' : 'Due'}
                   </span>
                 </div>
-                <button type="button" className="primary-btn" onClick={() => openPayment(sale)}>
-                  Record payment
-                </button>
+                <div className="balance-actions">
+                  <button type="button" className="ghost-btn" onClick={() => setStatementSale(sale)}>
+                    <FileText size={16} aria-hidden /> Statement
+                  </button>
+                  <button type="button" className="primary-btn" onClick={() => openPayment(sale)}>
+                    Record payment
+                  </button>
+                </div>
               </li>
             )
           })}
@@ -208,6 +230,59 @@ export function CreditView() {
               </button>
             </div>
           </form>
+        </ModalPortal>
+      )}
+
+      {statementSale && (
+        <ModalPortal onClose={() => setStatementSale(null)}>
+          <section className="modal panel statement-modal" role="dialog" aria-modal="true" aria-labelledby="statement-title">
+            <div className="modal-head no-print">
+              <h2 id="statement-title">Customer statement</h2>
+              <button type="button" className="icon-btn" onClick={() => setStatementSale(null)} aria-label="Close">
+                <X size={18} />
+              </button>
+            </div>
+            <div id="print-statement" className="statement-sheet">
+              <header className="statement-head">
+                <div><strong>Prince Auto</strong><span>Customer account statement</span></div>
+                <div><span>Statement date</span><strong>{new Date().toLocaleDateString()}</strong></div>
+              </header>
+              <div className="statement-customer">
+                <strong>{statementSale.customerName || 'Unnamed customer'}</strong>
+                {statementSale.customerPhone && <span>{statementSale.customerPhone}</span>}
+              </div>
+              <div className="statement-summary">
+                <span>Current balance</span><strong>{money(statementBalance)}</strong>
+              </div>
+              <h3>Credit sales</h3>
+              <div className="statement-table-wrap">
+                <table className="statement-table">
+                  <thead><tr><th>Date</th><th>Receipt</th><th>Total</th><th>Paid</th><th>Balance</th></tr></thead>
+                  <tbody>{statementSales.map((sale) => (
+                    <tr key={sale.id}>
+                      <td>{new Date(sale.createdAt).toLocaleDateString()}</td><td>{sale.receiptNumber}</td>
+                      <td>{money(sale.total)}</td><td>{money(sale.amountPaid)}</td><td>{money(sale.balanceDue)}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+              {statementPayments.length > 0 && (
+                <><h3>Payments received</h3><ul className="statement-payment-list">
+                  {statementPayments.map((payment) => <li key={payment.id}>
+                    <span>{new Date(payment.createdAt).toLocaleDateString()} · {payment.paymentMethod}</span>
+                    <strong>{money(payment.amount)}</strong>
+                  </li>)}
+                </ul></>
+              )}
+              <p className="statement-thanks">Thank you for your business.</p>
+            </div>
+            <div className="modal-actions no-print">
+              <button type="button" className="ghost-btn" onClick={() => setStatementSale(null)}>Close</button>
+              <button type="button" className="primary-btn" onClick={() => window.print()}>
+                <Printer size={16} aria-hidden /> Print statement
+              </button>
+            </div>
+          </section>
         </ModalPortal>
       )}
     </div>

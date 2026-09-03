@@ -2,14 +2,13 @@ import { useMemo } from 'react'
 import {
   AlertTriangle,
   Banknote,
-  ClipboardList,
   CreditCard,
   DollarSign,
   Package,
   Smartphone,
+  ShoppingCart,
   TrendingUp,
   WalletCards,
-  Wrench,
 } from 'lucide-react'
 import { formatDateTime, money, todayKey } from '../lib/format'
 import { useShop } from '../store'
@@ -56,16 +55,17 @@ export function DashboardView({ onNavigate }: Props) {
     for (const s of todays) byMethod[s.paymentMethod] += s.amountPaid
     const methodMax = Math.max(byMethod.cash, byMethod.card, byMethod.transfer, byMethod.credit, 1)
     const outstanding = active.reduce((sum, sale) => sum + sale.balanceDue, 0)
+    const balanceCustomers = new Set(active.filter((sale) => sale.balanceDue > 0).map((sale) => sale.customerId ?? `${sale.customerName}:${sale.customerPhone}`)).size
 
     // Inventory summary (parts only, labor excluded)
     const parts = products.filter((p) => !p.isLabor)
-    const laborCount = products.length - parts.length
     const unitsOnHand = parts.reduce((sum, p) => sum + p.stock, 0)
     const stockValue = parts.reduce((sum, p) => sum + p.stock * p.costPrice, 0)
     const lowParts = parts
       .filter((p) => p.stock <= p.lowStockAt)
       .sort((a, b) => a.stock - b.stock)
     const outCount = parts.filter((p) => p.stock <= 0).length
+    const categoryCount = new Set(parts.map((p) => p.category).filter(Boolean)).size
 
     // Top sellers, last 7 days
     const weekAgo = Date.now() - 7 * DAY_MS
@@ -88,7 +88,8 @@ export function DashboardView({ onNavigate }: Props) {
       taxToday,
       profitToday,
       outstanding,
-      jobsToday: todays.length,
+      balanceCustomers,
+      salesToday: todays.length,
       itemsToday,
       series,
       seriesMax,
@@ -96,11 +97,11 @@ export function DashboardView({ onNavigate }: Props) {
       byMethod,
       methodMax,
       partsCount: parts.length,
-      laborCount,
       unitsOnHand,
       stockValue,
       lowParts,
       outCount,
+      categoryCount,
       topSellers,
       recent,
     }
@@ -154,22 +155,22 @@ export function DashboardView({ onNavigate }: Props) {
             <WalletCards size={20} aria-hidden />
           </span>
           <div className="kpi-body">
-            <span className="kpi-label">Customer balances</span>
+            <span className="kpi-label">Customer balances · {data.balanceCustomers} account{data.balanceCustomers === 1 ? '' : 's'}</span>
             <strong className="kpi-value">{money(data.outstanding)}</strong>
           </div>
         </button>
         <button type="button" className="kpi-card" onClick={() => onNavigate('sales')}>
           <span className="kpi-icon is-blue">
-            <ClipboardList size={20} aria-hidden />
+              <ShoppingCart size={20} aria-hidden />
           </span>
           <div className="kpi-body">
-            <span className="kpi-label">Jobs today</span>
-            <strong className="kpi-value">{data.jobsToday}</strong>
+            <span className="kpi-label">Sales today</span>
+            <strong className="kpi-value">{data.salesToday}</strong>
           </div>
         </button>
         <button type="button" className="kpi-card" onClick={() => onNavigate('sell')}>
           <span className="kpi-icon is-teal">
-            <Wrench size={20} aria-hidden />
+              <ShoppingCart size={20} aria-hidden />
           </span>
           <div className="kpi-body">
             <span className="kpi-label">Items sold today</span>
@@ -303,8 +304,8 @@ export function DashboardView({ onNavigate }: Props) {
               <strong>{data.partsCount}</strong>
             </div>
             <div className="inv-stat">
-              <span>Labor rates</span>
-              <strong>{data.laborCount}</strong>
+              <span>Categories</span>
+              <strong>{data.categoryCount}</strong>
             </div>
           </div>
           {data.lowParts.length > 0 && (
@@ -344,15 +345,15 @@ export function DashboardView({ onNavigate }: Props) {
           )}
         </section>
 
-        <section className="card recent-card" aria-label="Recent jobs">
+        <section className="card recent-card" aria-label="Recent sales">
           <div className="card-head">
-            <h2>Recent jobs</h2>
+            <h2>Recent sales</h2>
             <button type="button" className="link-btn" onClick={() => onNavigate('sales')}>
               View all
             </button>
           </div>
           {data.recent.length === 0 ? (
-            <p className="card-empty">No jobs yet. Ring up the first one on Checkout.</p>
+            <p className="card-empty">No sales yet. Ring up the first one on Checkout.</p>
           ) : (
             <ul className="recent-list">
               {data.recent.map((sale: Sale) => (

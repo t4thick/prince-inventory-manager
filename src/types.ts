@@ -20,6 +20,10 @@ export type Product = {
   taxRate: number
   isLabor: boolean
   barcode: string
+  category: string
+  brand: string
+  unit: string
+  shelfLocation: string
   stock: number
   lowStockAt: number
   sku: string
