@@ -2982,6 +2982,91 @@ button.kpi-card:hover {
 .offline-banner { color: #854d0e; background: #fefce8; }
 .pricing-preview { color: var(--ink); }
 
+/* Retail workspace: strong type, quiet surfaces, deliberate spacing. */
+:root { --radius: 16px; --bg: #f7f7f7; --muted: #666; --line: #e8e8e8; }
+.app-frame { grid-template-columns: 248px minmax(0, 1fr); }
+.sidebar { padding: 32px 18px 24px; gap: 16px; }
+.sidebar-brand { padding: 0 4px 24px; gap: 8px; flex-wrap: wrap; }
+.store-monogram { display: grid; place-items: center; width: 38px; height: 38px; background: #fff; color: #111; border-radius: 10px; margin-right: 4px; }
+.sidebar .brand-word { font-size: 1.35rem; }
+.sidebar .brand-sub { font-size: 0.75rem; letter-spacing: 0.08em; }
+.sidebar-section-label { padding: 0 12px; margin: 0; color: #aaa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; }
+.side-nav { gap: 6px; }
+.side-link { min-height: 48px; border-radius: 10px; color: #bbb; font-size: 0.9rem; }
+.side-link.active { background: #fff; color: #111; }
+.topbar { height: 76px; padding: 0 32px; background: #fff; }
+.topbar-title { font-size: 0.875rem; color: #555; font-weight: 500; }
+.main-stage { padding: 36px; max-width: 1640px; width: 100%; margin: auto; }
+.view { gap: 26px; }
+.view h1 { font-size: clamp(1.9rem, 3vw, 2.5rem); font-weight: 650; letter-spacing: -0.055em; }
+.eyebrow { font-size: 0.75rem; margin-bottom: 10px; letter-spacing: 0.1em; }
+.page-description { color: var(--muted); margin: 10px 0 0; font-size: 0.9375rem; }
+.primary-btn { min-height: 46px; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 0.875rem; box-shadow: none; }
+.ghost-btn { min-height: 42px; border-radius: 10px; }
+.card { padding: 24px; box-shadow: none; }
+.card-head { margin-bottom: 22px; gap: 12px; }
+.card-head h2 { font-size: 1rem; font-weight: 650; letter-spacing: -0.02em; }
+.card-caption { font-size: 0.8125rem; color: #717171; margin: 6px 0 0; line-height: 1.5; }
+.retail-metrics { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; }
+.retail-metric { display: flex; flex-direction: column; align-items: stretch; gap: 22px; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: #fff; text-align: left; color: #111; }
+.retail-metric > span { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: #555; font-size: 0.875rem; }
+.retail-metric > strong { font-size: clamp(1.4rem,2vw,2rem); font-weight: 650; letter-spacing: -0.055em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.retail-metric em { font-size: 0.8125rem; font-style: normal; letter-spacing: normal; font-weight: 400; margin-left: 8px; }
+.retail-metric small { color: #717171; font-size: 0.75rem; line-height: 1.5; }
+.metric-featured { color: #fff; background: #111; border-color: #111; }
+.metric-featured > span, .metric-featured small { color: #ccc; }
+.retail-dashboard-grid { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); gap: 22px; }
+.retail-dashboard-grid > * { min-width: 0; }
+.retail-recent { grid-column: 1 / -1; }
+.retail-chart { height: 210px; display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 16px; }
+.retail-chart-day { display: flex; flex-direction: column; text-align: center; gap: 12px; min-width: 0; font-size: 0.75rem; color: #666; }
+.chart-amount { font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.chart-track { flex: 1; display: flex; align-items: end; background: repeating-linear-gradient(to top, #eee 0, #eee 1px, transparent 1px, transparent 40px); }
+.chart-bar { background: #d8d8d8; width: 65%; margin: 0 auto; border-radius: 5px 5px 0 0; }
+.chart-current { background: #111; }
+.collection-total { font-size: 2.25rem; font-weight: 600; letter-spacing: -0.05em; }
+.neutral-pill { font-size: 0.75rem; padding: 5px 10px; border-radius: 20px; background: #f3f3f3; color: #555; }
+.retail-payment-list, .retail-ranked-list, .retail-stock-alerts { list-style: none; padding: 0; margin: 18px 0 0; }
+.retail-payment-list li, .retail-ranked-list li, .retail-stock-alerts li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid #eee; font-size: 0.875rem; }
+.retail-ranked-list li:last-child, .retail-stock-alerts li:last-child, .retail-payment-list li:last-child { border: 0; }
+.retail-ranked-list li > div, .retail-stock-alerts li > div { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; overflow-wrap: anywhere; }
+.retail-ranked-list small, .retail-stock-alerts small { color: #717171; font-size: 0.75rem; }
+.rank-number { color: #888; font-size: 0.8125rem; }
+.stock-warning { color: var(--red); font-size: 0.8125rem; }
+.retail-recent-empty { color: #717171; font-size: 0.9375rem; padding: 24px 0; }
+.setup-strip { display: flex; align-items: center; gap: 18px; padding: 22px 24px; border: 1px dashed #ccc; border-radius: 14px; background: #fff; }
+.setup-strip h2 { font-size: 1rem; margin: 0 0 6px; }.setup-strip p { color: #666; font-size: 0.875rem; margin: 0; }
+.setup-strip > div { flex: 1; }.setup-icon { display: grid; place-items: center; width: 48px; height: 48px; background: #f4f4f4; border-radius: 12px; }
+.retail-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 60px 24px; text-align: center; grid-column: 1 / -1; color: #777; }
+.retail-empty h2, .retail-empty h3 { font-size: 1.125rem; font-weight: 600; color: #222; margin: 0; }
+.retail-empty p { max-width: 36ch; font-size: 0.9375rem; line-height: 1.6; margin: 0; }
+.retail-empty .primary-btn { margin-top: 12px; }.retail-empty.compact { padding: 30px 16px; }.retail-empty.compact h3 { font-size: 0.9375rem; }
+.inventory-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }.inventory-toolbar .search-row { flex: 1; min-width: 240px; background: #fff; }
+.inventory-filters { display: flex; gap: 4px; padding: 4px; border: 1px solid #e5e5e5; border-radius: 10px; }
+.inventory-filters button { border: 0; padding: 9px 13px; border-radius: 7px; background: transparent; color: #666; font-size: 0.8125rem; }
+.inventory-filters button[aria-pressed="true"] { background: #111; color: #fff; }
+.stock-list { gap: 0; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: #fff; }
+.stock-row { border: 0; border-bottom: 1px solid #eee; border-radius: 0; padding: 22px 24px; box-shadow: none; }.stock-row:last-child { border-bottom: 0; }
+.stock-info { gap: 6px; }.stock-info > strong { font-size: 1rem; }.stock-actions { opacity: 0.8; }.stock-row:hover .stock-actions { opacity: 1; }
+.product-grid { gap: 16px; }.product-tile { padding: 22px; min-height: 160px; border-radius: 12px; }.tile-name { font-size: 1rem; }.tile-price { font-size: 1.4rem; }.tile-stock { font-size: 0.8125rem; }
+.catalog .search-row { padding: 8px 14px; border-bottom: 1px solid #eee; }.cart { border-radius: 16px; box-shadow: none; }.cart-head { padding-bottom: 18px; border-bottom: 1px solid #eee; }
+.modal label { font-size: 0.875rem; }.modal-content { gap: 20px; }.modal input, .modal select, .login-form input { min-height: 46px; font-size: 1rem; }
+.login-screen { display: grid; grid-template-columns: 1fr 1fr; padding: 0; gap: 0; background: #fff; align-items: stretch; }
+.login-identity { background: #111; color: #fff; padding: clamp(32px,5vw,80px); min-height: 100dvh; display: flex; flex-direction: column; justify-content: space-between; gap: 60px; }
+.identity-wordmark { font-weight: 650; font-size: 1.125rem; letter-spacing: 0.06em; }.identity-wordmark span { display: block; margin-top: 8px; font-size: 0.75rem; font-weight: 400; letter-spacing: 0.2em; color: #aaa; }
+.identity-kicker { color: #aaa; font-size: 0.9375rem; }.login-identity h1 { font-size: clamp(2.5rem,4.5vw,4.5rem); letter-spacing: -0.065em; line-height: 1.12; margin: 20px 0; font-weight: 550; }.login-identity h1 span { color: #8d8d8d; }.login-identity .store-contact { color: #bbb; }
+.login-card { width: min(430px,100%); align-self: center; justify-self: center; margin: 50px 24px; border: 0; box-shadow: none; padding: 24px; }.login-heading { font-size: 2rem; letter-spacing: -0.04em; margin: 36px 0 8px; }.login-lead { font-size: 0.9375rem; margin-bottom: 28px; }.login-submit { margin-top: 12px; }
+@media (max-width: 1200px) { .retail-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }.main-stage { padding: 28px; }.chart-amount { display: none; } }
+@media (max-width: 1023px) { .app-frame { display: block; }.sidebar { display: none; }.main-stage { padding-bottom: 100px; }.topbar { height: 64px; padding: 0 20px; } }
+@media (max-width: 700px) {
+  .login-screen { grid-template-columns: 1fr; }.login-identity { min-height: auto; padding: 32px 24px; gap: 16px; }.login-identity > div:nth-child(2), .login-identity .store-contact { display: none; }.login-card { margin: 12px 0; }.login-card .login-brand { display: none; }
+  .main-stage { padding: 24px 16px 110px; }.view { gap: 22px; }.view h1 { font-size: 2rem; }.eyebrow { font-size: 0.75rem; }.page-description { font-size: 0.875rem; }
+  .retail-metrics { gap: 10px; }.retail-metric { padding: 18px 14px; gap: 20px; border-radius: 12px; }.retail-metric > span { font-size: 0.8125rem; }.retail-metric > span svg { display: none; }.retail-metric > strong { font-size: 1.35rem; }.retail-metric em { display: block; margin: 4px 0 0; }.retail-metric small { font-size: 0.75rem; }
+  .retail-dashboard-grid { grid-template-columns: minmax(0,1fr); gap: 16px; }.card { padding: 20px; }.retail-chart { height: 160px; gap: 10px; }.setup-strip { flex-wrap: wrap; padding: 20px; }.setup-strip .ghost-btn { width: 100%; }.setup-icon { display: none; }
+  .inventory-toolbar { align-items: stretch; }.inventory-toolbar .search-row { width: 100%; min-width: 0; }.inventory-filters { width: 100%; }.inventory-filters button { flex: 1; padding: 10px 8px; }
+  .stock-row { padding: 20px 16px; }.stock-info { grid-column: 1 / -1; }.product-tile { padding: 16px; }.retail-recent .recent-list li { flex-wrap: wrap; }.retail-recent .recent-main { min-width: 65%; }
+}
+
 /* ---------- Print (receipt) ---------- */
 
 @media print {

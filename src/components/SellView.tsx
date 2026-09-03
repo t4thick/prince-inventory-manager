@@ -222,7 +222,7 @@ export function SellView() {
               )
             })}
             {filtered.length === 0 && (
-              <p className="empty-note">No parts or services match that search.</p>
+              <div className="retail-empty"><h2>{products.length ? 'No matching products' : 'Ready when your products are'}</h2><p>{products.length ? 'Try searching by product name or SKU.' : 'Add products in the Products tab to start selling.'}</p></div>
             )}
           </div>
         </section>

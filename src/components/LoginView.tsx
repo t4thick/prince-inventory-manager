@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { LogIn, UserPlus } from 'lucide-react'
 import { useAuth } from '../auth'
+import { StoreContact } from './StoreContact'
 
 type Mode = 'signin' | 'signup'
 
@@ -34,13 +35,18 @@ export function LoginView() {
 
   return (
     <div className="login-screen">
-      <div className="ambient" aria-hidden />
+      <aside className="login-identity">
+        <div className="identity-wordmark">PRINCE AUTO<span>KUMASI · GHANA</span></div>
+        <div><p className="identity-kicker">Your store, in order.</p><h1>Every product.<br />Every sale.<br /><span>All in one place.</span></h1></div>
+        <StoreContact />
+      </aside>
       <div className="login-card panel">
         <div className="brand-mark login-brand">
           <span className="brand-word">Prince</span>
           <span className="brand-sub">Auto</span>
         </div>
-        <p className="login-lead">Sign in to manage parts, sales, and payments.</p>
+        <h2 className="login-heading">Welcome back.</h2>
+        <p className="login-lead">Sign in to your store workspace.</p>
 
         <div className="login-tabs" role="tablist">
           <button

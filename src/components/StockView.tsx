@@ -63,13 +63,14 @@ export function StockView() {
   const [originalStock, setOriginalStock] = useState(0)
   const [saving, setSaving] = useState(false)
   const [query, setQuery] = useState('')
+  const [stockFilter, setStockFilter] = useState('all')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [open, setOpen] = useState(false)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const list = [...products].sort((a, b) => {
+    const list = products.filter((p) => stockFilter === 'all' || (stockFilter === 'low' ? !p.isLabor && p.stock > 0 && p.stock <= p.lowStockAt : !p.isLabor && p.stock === 0)).sort((a, b) => {
       const aLow = a.stock <= a.lowStockAt ? 0 : 1
       const bLow = b.stock <= b.lowStockAt ? 0 : 1
       if (aLow !== bLow) return aLow - bLow
@@ -80,7 +81,7 @@ export function StockView() {
       (p) => [p.name, p.sku, p.category, p.brand, p.shelfLocation]
         .some((value) => value.toLowerCase().includes(q)),
     )
-  }, [products, query])
+  }, [products, query, stockFilter])
 
   function openCreate() {
     if (!isOwner) return
@@ -175,6 +176,7 @@ export function StockView() {
         <div>
           <p className="eyebrow">Inventory</p>
           <h1>Products</h1>
+          <p className="page-description">Your catalog, prices, and stock levels.</p>
         </div>
         {isOwner && (
           <button type="button" className="primary-btn" onClick={openCreate}>
@@ -188,6 +190,7 @@ export function StockView() {
         <p className="role-note panel">Workers can adjust stock counts. Only the owner can add, edit, or remove parts.</p>
       )}
 
+      <div className="inventory-toolbar">
       <div className="search-row panel-search">
         <Search size={18} aria-hidden />
         <input
@@ -196,6 +199,12 @@ export function StockView() {
           placeholder="Find by name, part #, category, brand, or shelf"
           aria-label="Search products"
         />
+      </div>
+      <div className="inventory-filters" aria-label="Filter inventory">
+        {(['all', 'low', 'out'] as const).map((filter) => <button key={filter} type="button" aria-pressed={stockFilter === filter} onClick={() => setStockFilter(filter)}>
+          {filter === 'all' ? `All products (${products.length})` : filter === 'low' ? 'Low stock' : 'Out of stock'}
+        </button>)}
+      </div>
       </div>
 
       <ul className="stock-list">
@@ -270,7 +279,7 @@ export function StockView() {
           )
         })}
         {filtered.length === 0 && (
-          <li className="empty-note panel">No products yet. Add what Prince keeps on the shelf.</li>
+          <li className="retail-empty panel"><PackagePlus size={36} aria-hidden /><h2>{products.length ? 'No matching products' : 'Your shelves start here'}</h2><p>{products.length ? 'Try another search or stock filter.' : 'Add your first product with its price and starting quantity.'}</p>{isOwner && !products.length && <button type="button" className="primary-btn" onClick={openCreate}>Add your first product</button>}</li>
         )}
       </ul>
 

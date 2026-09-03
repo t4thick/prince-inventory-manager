@@ -16,16 +16,6 @@ import type {
   Sale,
 } from './types'
 
-const seedProducts: Product[] = [
-  { id: 'p_oil', name: 'Engine Oil 5W-30 (qt)', price: 8.99, costPrice: 5.5, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', category: 'Oils & fluids', brand: '', unit: 'Bottle', shelfLocation: '', stock: 32, lowStockAt: 8, sku: 'OIL-5W30', createdAt: '', updatedAt: '' },
-  { id: 'p_filter_oil', name: 'Oil Filter', price: 12.5, costPrice: 7, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', category: 'Filters', brand: '', unit: 'Each', shelfLocation: '', stock: 18, lowStockAt: 4, sku: 'FILT-OIL', createdAt: '', updatedAt: '' },
-  { id: 'p_brake', name: 'Brake Pads (set)', price: 45, costPrice: 26, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', category: 'Brakes', brand: '', unit: 'Set', shelfLocation: '', stock: 8, lowStockAt: 2, sku: 'BRK-PAD', createdAt: '', updatedAt: '' },
-  { id: 'p_spark', name: 'Spark Plug', price: 6, costPrice: 3.25, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', category: 'Ignition', brand: '', unit: 'Each', shelfLocation: '', stock: 24, lowStockAt: 6, sku: 'SPK-PLG', createdAt: '', updatedAt: '' },
-  { id: 'p_air', name: 'Air Filter', price: 18, costPrice: 10, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', category: 'Filters', brand: '', unit: 'Each', shelfLocation: '', stock: 5, lowStockAt: 3, sku: 'FILT-AIR', createdAt: '', updatedAt: '' },
-  { id: 'p_coolant', name: 'Coolant 1 gal', price: 22, costPrice: 13, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', category: 'Oils & fluids', brand: '', unit: 'Bottle', shelfLocation: '', stock: 10, lowStockAt: 3, sku: 'CLNT-1G', createdAt: '', updatedAt: '' },
-  { id: 'p_svc_oil', name: 'Service item', price: 49.99, costPrice: 0, taxable: false, taxRate: 0.2, isLabor: true, barcode: '', category: 'Services', brand: '', unit: 'Service', shelfLocation: '', stock: 999, lowStockAt: 0, sku: 'SVC-OIL', createdAt: '', updatedAt: '' },
-  { id: 'p_svc_brake', name: 'Service item', price: 120, costPrice: 0, taxable: false, taxRate: 0.2, isLabor: true, barcode: '', category: 'Services', brand: '', unit: 'Service', shelfLocation: '', stock: 999, lowStockAt: 0, sku: 'SVC-BRK', createdAt: '', updatedAt: '' },
-]
 
 type ProductRow = {
   id: string
@@ -388,30 +378,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     const costs = new Map(
       ((costRes.data ?? []) as ProductCostRow[]).map((row) => [row.product_id, Number(row.cost_price)]),
     )
-    let nextProducts = (productRes.data as ProductRow[]).map((row) =>
+    const nextProducts = (productRes.data as ProductRow[]).map((row) =>
       productFromRow(row, costs.get(row.id) ?? 0),
     )
-    if (nextProducts.length === 0 && isOwner) {
-      const now = new Date().toISOString()
-      const seeded = seedProducts.map((p) => ({ ...p, createdAt: now, updatedAt: now }))
-      await supabase.from('products').upsert(seeded.map(productToRow), {
-        onConflict: 'id',
-        ignoreDuplicates: true,
-      })
-      await supabase.from('product_costs').upsert(
-        seeded.map((product) => ({
-          product_id: product.id,
-          cost_price: product.costPrice,
-        })),
-        { onConflict: 'product_id', ignoreDuplicates: true },
-      )
-      const again = await supabase.from('products').select('*').order('name')
-      if (!again.error && again.data) {
-        nextProducts = (again.data as ProductRow[]).map((row) =>
-          productFromRow(row, costs.get(row.id) ?? 0),
-        )
-      }
-    }
 
     const financials = new Map(
       ((financialRes.data ?? []) as SaleFinancialRow[]).map((row) => [row.sale_id, row]),

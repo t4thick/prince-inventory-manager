@@ -11,6 +11,7 @@ import {
   WalletCards,
   WifiOff,
   Wrench,
+  Store,
 } from 'lucide-react'
 import { AuthProvider, useAuth } from './auth'
 import { DashboardView } from './components/DashboardView'
@@ -55,10 +56,12 @@ function Shell() {
       {showInstall && <InstallPrompt onClose={() => setShowInstall(false)} />}
       <aside className="sidebar" aria-label="Main navigation">
         <div className="sidebar-brand">
+          <span className="store-monogram" aria-hidden><Store size={22} /></span>
           <span className="brand-word">Prince</span>
           <span className="brand-sub">Auto</span>
         </div>
 
+        <p className="sidebar-section-label">Store workspace</p>
         <nav className="side-nav">
           {desktopNavItems.map(({ id, label, icon: Icon }) => (
             <button
