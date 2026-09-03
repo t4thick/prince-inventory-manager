@@ -17,7 +17,7 @@ export default defineConfig({
       manifest: {
         name: 'Prince Auto',
         short_name: 'Prince Auto',
-        description: 'Parts, labor, checkout & shared inventory for Prince Auto mechanic shop.',
+        description: 'Product sales, checkout & shared inventory for Prince Auto.',
         theme_color: '#1c2430',
         background_color: '#f4f5f7',
         display: 'standalone',

@@ -40,7 +40,6 @@ export function CreditView() {
         return [
           sale.customerName,
           sale.customerPhone,
-          sale.vehicleInfo,
           sale.receiptNumber,
         ].some((value) => value.toLowerCase().includes(needle))
       })
@@ -136,7 +135,7 @@ export function CreditView() {
                 <div className="balance-main">
                   <div>
                     <strong>{sale.customerName || 'Unnamed customer'}</strong>
-                    <span>{sale.customerPhone || sale.vehicleInfo || sale.receiptNumber}</span>
+                    <span>{sale.customerPhone || sale.receiptNumber}</span>
                   </div>
                   <strong className="balance-amount">{money(sale.balanceDue)}</strong>
                 </div>

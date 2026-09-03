@@ -62,31 +62,31 @@ export function ReportsView() {
     const items = inRange.reduce((sum, s) => sum + s.items.reduce((n, i) => n + i.qty, 0), 0)
     const avgTicket = inRange.length > 0 ? revenue / inRange.length : 0
 
-    const byMethod = new Map<string, { jobs: number; revenue: number; profit: number }>()
+    const byMethod = new Map<string, { sales: number; revenue: number; profit: number }>()
     for (const s of inRange) {
-      const cur = byMethod.get(s.paymentMethod) ?? { jobs: 0, revenue: 0, profit: 0 }
-      cur.jobs += 1
+      const cur = byMethod.get(s.paymentMethod) ?? { sales: 0, revenue: 0, profit: 0 }
+      cur.sales += 1
       cur.revenue += s.total
       cur.profit += s.grossProfit
       byMethod.set(s.paymentMethod, cur)
     }
 
-    const byWorker = new Map<string, { jobs: number; revenue: number; profit: number }>()
+    const byWorker = new Map<string, { sales: number; revenue: number; profit: number }>()
     for (const s of inRange) {
       const name = s.workerName || 'Unknown'
-      const cur = byWorker.get(name) ?? { jobs: 0, revenue: 0, profit: 0 }
-      cur.jobs += 1
+      const cur = byWorker.get(name) ?? { sales: 0, revenue: 0, profit: 0 }
+      cur.sales += 1
       cur.revenue += s.total
       cur.profit += s.grossProfit
       byWorker.set(name, cur)
     }
 
     const byItem = new Map<string, { qty: number; revenue: number; profit: number }>()
-    const byDay = new Map<string, { jobs: number; sales: number; tax: number; profit: number }>()
+    const byDay = new Map<string, { count: number; sales: number; tax: number; profit: number }>()
     for (const s of inRange) {
       const day = todayKey(new Date(s.createdAt))
-      const daily = byDay.get(day) ?? { jobs: 0, sales: 0, tax: 0, profit: 0 }
-      daily.jobs += 1
+      const daily = byDay.get(day) ?? { count: 0, sales: 0, tax: 0, profit: 0 }
+      daily.count += 1
       daily.sales += s.total
       daily.tax += s.taxTotal
       daily.profit += s.grossProfit
@@ -120,7 +120,7 @@ export function ReportsView() {
 
   function exportCsv() {
     const rows: string[][] = [
-      ['Receipt', 'Date', 'Worker', 'Customer', 'Vehicle', 'Payment', 'Status', 'Item', 'Qty', 'Unit price (GHS)', 'Subtotal (GHS)', 'Tax (GHS)', 'Total (GHS)', 'Cost (GHS)', 'Gross profit (GHS)', 'Paid (GHS)', 'Balance (GHS)'],
+      ['Receipt', 'Date', 'Worker', 'Customer', 'Payment', 'Status', 'Item', 'Qty', 'Unit price (GHS)', 'Subtotal (GHS)', 'Tax (GHS)', 'Total (GHS)', 'Cost (GHS)', 'Gross profit (GHS)', 'Paid (GHS)', 'Balance (GHS)'],
     ]
     for (const s of report.inRange) {
       for (const item of s.items) {
@@ -129,7 +129,6 @@ export function ReportsView() {
           s.createdAt,
           s.workerName,
           s.customerName,
-          s.vehicleInfo,
           s.paymentMethod,
           s.paymentStatus,
           item.name,
@@ -236,7 +235,7 @@ export function ReportsView() {
         </div>
         <div className="kpi-card">
           <div className="kpi-body">
-            <span className="kpi-label">Jobs</span>
+            <span className="kpi-label">Sales</span>
             <strong className="kpi-value">{report.inRange.length}</strong>
           </div>
         </div>
@@ -255,7 +254,7 @@ export function ReportsView() {
       </div>
 
       {report.inRange.length === 0 ? (
-        <p className="empty-note card">No jobs in this range yet.</p>
+        <p className="empty-note card">No sales in this range yet.</p>
       ) : (
         <div className="report-grid">
           <section className="card" aria-label="Revenue by payment method">
@@ -266,7 +265,7 @@ export function ReportsView() {
               <thead>
                 <tr>
                   <th>Method</th>
-                  <th className="num">Jobs</th>
+                  <th className="num">Sales</th>
                   <th className="num">Revenue</th>
                   {isOwner && <th className="num">Profit</th>}
                 </tr>
@@ -275,7 +274,7 @@ export function ReportsView() {
                 {report.byMethod.map(([method, row]) => (
                   <tr key={method}>
                     <td>{methodLabel[method as keyof typeof methodLabel] ?? method}</td>
-                    <td className="num">{row.jobs}</td>
+                    <td className="num">{row.sales}</td>
                     <td className="num">{money(row.revenue)}</td>
                     {isOwner && <td className="num">{money(row.profit)}</td>}
                   </tr>
@@ -292,7 +291,7 @@ export function ReportsView() {
               <thead>
                 <tr>
                   <th>Worker</th>
-                  <th className="num">Jobs</th>
+                  <th className="num">Sales</th>
                   <th className="num">Revenue</th>
                   {isOwner && <th className="num">Profit</th>}
                 </tr>
@@ -301,7 +300,7 @@ export function ReportsView() {
                 {report.byWorker.map(([name, row]) => (
                   <tr key={name}>
                     <td>{name}</td>
-                    <td className="num">{row.jobs}</td>
+                    <td className="num">{row.sales}</td>
                     <td className="num">{money(row.revenue)}</td>
                     {isOwner && <td className="num">{money(row.profit)}</td>}
                   </tr>
@@ -344,7 +343,7 @@ export function ReportsView() {
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th className="num">Jobs</th>
+                  <th className="num">Sales</th>
                   <th className="num">Sales</th>
                   <th className="num">Tax</th>
                   {isOwner && <th className="num">Profit</th>}
@@ -354,7 +353,7 @@ export function ReportsView() {
                 {report.byDay.map(([day, row]) => (
                   <tr key={day}>
                     <td>{day}</td>
-                    <td className="num">{row.jobs}</td>
+                    <td className="num">{row.count}</td>
                     <td className="num">{money(row.sales)}</td>
                     <td className="num">{money(row.tax)}</td>
                     {isOwner && <td className="num">{money(row.profit)}</td>}

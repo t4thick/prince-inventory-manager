@@ -22,7 +22,6 @@ export function SellView() {
   const [customerId, setCustomerId] = useState<string | null>(null)
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
-  const [vehicleInfo, setVehicleInfo] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [notes, setNotes] = useState('')
   const [amountPaid, setAmountPaid] = useState('0')
@@ -122,15 +121,14 @@ export function SellView() {
     setCustomerId(match?.id ?? null)
     if (match) {
       setCustomerPhone(match.phone)
-      setVehicleInfo(match.vehicleInfo)
     }
   }
 
   async function takePayment() {
     if (detailed.length === 0 || paying) return
     if (method === 'credit') {
-      if (!customerName.trim() || (!customerPhone.trim() && !vehicleInfo.trim())) {
-        setFlash('Credit requires a customer name and phone or vehicle.')
+      if (!customerName.trim() || !customerPhone.trim()) {
+        setFlash('Credit requires a customer name and phone number.')
         return
       }
       if (!isOnline()) {
@@ -148,7 +146,7 @@ export function SellView() {
       customerId,
       customerName,
       customerPhone,
-      vehicleInfo,
+      vehicleInfo: '',
       dueDate: dueDate || null,
       notes,
       amountPaid: method === 'credit' ? Number(amountPaid) : total,
@@ -161,7 +159,6 @@ export function SellView() {
     setCustomerId(null)
     setCustomerName('')
     setCustomerPhone('')
-    setVehicleInfo('')
     setDueDate('')
     setNotes('')
     setAmountPaid('0')
@@ -190,14 +187,14 @@ export function SellView() {
       )}
 
       <div className="sell-grid">
-        <section className="catalog panel" aria-label="Parts and labor">
+        <section className="catalog panel" aria-label="Products">
           <div className="search-row">
             <Search size={18} aria-hidden />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search parts, labor, or part #"
-              aria-label="Search parts and labor"
+              placeholder="Search products or SKU"
+              aria-label="Search products"
             />
           </div>
 
@@ -248,18 +245,10 @@ export function SellView() {
               <datalist id="customer-list">
                 {customers.map((customer) => (
                   <option key={customer.id} value={customer.name}>
-                    {customer.phone || customer.vehicleInfo}
+                    {customer.phone}
                   </option>
                 ))}
               </datalist>
-            </label>
-            <label>
-              Vehicle
-              <input
-                value={vehicleInfo}
-                onChange={(e) => setVehicleInfo(e.target.value)}
-                placeholder="Year / make / plate (optional)"
-              />
             </label>
             <label>
               Phone
@@ -267,7 +256,7 @@ export function SellView() {
                 inputMode="tel"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="Required for credit if no vehicle"
+                placeholder="Required for credit"
               />
             </label>
           </div>
@@ -351,7 +340,7 @@ export function SellView() {
               </li>
             ))}
             {detailed.length === 0 && (
-              <li className="cart-empty">Tap parts or labor to build a job.</li>
+              <li className="cart-empty">Tap products to build a sale.</li>
             )}
           </ul>
 

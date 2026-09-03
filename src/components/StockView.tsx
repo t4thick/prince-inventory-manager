@@ -59,7 +59,9 @@ function toDraft(product: Product): Draft {
 }
 
 export function StockView() {
-  const { products, addProduct, updateProduct, adjustStock, deleteProduct, isOwner } = useShop()
+  const { products, addProduct, updateProduct, adjustStock, setStock, deleteProduct, isOwner } = useShop()
+  const [originalStock, setOriginalStock] = useState(0)
+  const [saving, setSaving] = useState(false)
   const [query, setQuery] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
@@ -91,6 +93,7 @@ export function StockView() {
     if (!isOwner) return
     setEditingId(product.id)
     setDraft(toDraft(product))
+    setOriginalStock(product.stock)
     setOpen(true)
   }
 
@@ -100,8 +103,9 @@ export function StockView() {
     setDraft(emptyDraft)
   }
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault()
+    if (saving) return
     const name = draft.name.trim()
     const costPrice = Number(draft.costPrice)
     const price = Number(draft.price)
@@ -121,6 +125,13 @@ export function StockView() {
       taxRate > 1
     ) return
 
+    if (!Number.isSafeInteger(Number(draft.stock)) || Number(draft.stock) < 0) return
+    if (editingId && stock !== originalStock) {
+      setSaving(true)
+      try {
+        if (!await setStock(editingId, stock, originalStock)) return
+      } finally { setSaving(false) }
+    }
     if (editingId) {
       updateProduct(editingId, {
         name,
@@ -168,7 +179,7 @@ export function StockView() {
         {isOwner && (
           <button type="button" className="primary-btn" onClick={openCreate}>
             <PackagePlus size={18} aria-hidden />
-            Add part / labor
+            Add product
           </button>
         )}
       </header>
@@ -272,7 +283,7 @@ export function StockView() {
             aria-labelledby="product-form-title"
           >
             <div className="modal-head">
-              <h2 id="product-form-title">{editingId ? 'Edit item' : 'New part or labor'}</h2>
+              <h2 id="product-form-title">{editingId ? 'Edit item' : 'New product'}</h2>
               <button type="button" className="icon-btn" onClick={closeForm} aria-label="Close">
                 <X size={18} />
               </button>
@@ -350,11 +361,13 @@ export function StockView() {
                   />
                 </label>
                 <label>
-                  {editingId ? 'On hand (adjust in list)' : 'Initial on hand'}
+                  {editingId ? 'On hand' : 'Initial on hand'}
                   <input
                     required
                     inputMode="numeric"
-                    disabled={Boolean(editingId)}
+                    type="number"
+                    min="0"
+                    step="1"
                     value={draft.stock}
                     onChange={(e) => setDraft((d) => ({ ...d, stock: e.target.value }))}
                     placeholder="0"
@@ -421,14 +434,6 @@ export function StockView() {
                   />
                   Taxable by default
                 </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={draft.isLabor}
-                    onChange={(e) => setDraft((d) => ({ ...d, isLabor: e.target.checked }))}
-                  />
-                  Labor / service
-                </label>
               </div>
             </div>
 
@@ -436,8 +441,8 @@ export function StockView() {
               <button type="button" className="ghost-btn" onClick={closeForm}>
                 Cancel
               </button>
-              <button type="submit" className="primary-btn">
-                {editingId ? 'Save changes' : 'Add to shelf'}
+              <button type="submit" className="primary-btn" disabled={saving}>
+                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Add to shelf'}
               </button>
             </div>
           </form>

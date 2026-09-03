@@ -42,10 +42,9 @@ export function ReceiptModal({ sale, onClose }: Props) {
             <span className="receipt-meta">{sale.receiptNumber}</span>
           </header>
 
-          {(sale.customerName || sale.vehicleInfo) && (
+          {sale.customerName && (
             <div className="receipt-customer">
               {sale.customerName && <p>Customer: {sale.customerName}</p>}
-              {sale.vehicleInfo && <p>Vehicle: {sale.vehicleInfo}</p>}
             </div>
           )}
 

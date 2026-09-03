@@ -40,7 +40,7 @@ export function LoginView() {
           <span className="brand-word">Prince</span>
           <span className="brand-sub">Auto</span>
         </div>
-        <p className="login-lead">Sign in to manage parts, jobs, and payments.</p>
+        <p className="login-lead">Sign in to manage parts, sales, and payments.</p>
 
         <div className="login-tabs" role="tablist">
           <button

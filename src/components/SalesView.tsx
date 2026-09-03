@@ -31,12 +31,12 @@ export function SalesView() {
       <header className="view-header">
         <div>
           <p className="eyebrow">Work log</p>
-          <h1>Jobs</h1>
+          <h1>Sales</h1>
         </div>
       </header>
 
       {sales.length === 0 && (
-        <p className="empty-note panel">No jobs closed yet. Check out a customer on the Checkout tab.</p>
+        <p className="empty-note panel">No sales closed yet. Check out a customer on the Checkout tab.</p>
       )}
 
       {grouped.todays.length > 0 && (
@@ -109,11 +109,9 @@ function SaleList({
             </span>
           </div>
 
-          {(sale.customerName || sale.vehicleInfo) && (
+          {sale.customerName && (
             <p className="sale-customer">
               {sale.customerName}
-              {sale.customerName && sale.vehicleInfo ? ' · ' : ''}
-              {sale.vehicleInfo}
             </p>
           )}
 

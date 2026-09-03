@@ -313,6 +313,7 @@ type ShopContextValue = {
   addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => void
   updateProduct: (id: string, patch: Partial<Omit<Product, 'id' | 'createdAt'>>) => void
   adjustStock: (id: string, delta: number, reason?: string) => void
+  setStock: (id: string, stock: number, expectedStock: number) => Promise<boolean>
   deleteProduct: (id: string) => void
   checkout: (items: CartLine[], paymentMethod: PaymentMethod, details: CheckoutDetails) => Promise<Sale | null>
   recordPayment: (saleId: string, amount: number, method: CollectedPaymentMethod, notes?: string) => Promise<boolean>
@@ -537,6 +538,15 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       offlinePending,
       isOwner,
       clearError: () => setError(null),
+      setStock: async (id, stock, expectedStock) => {
+        if (!supabase) return false
+        const { error: err } = await supabase.rpc('set_product_stock', {
+          p_id: id, p_stock: stock, p_expected_stock: expectedStock,
+        })
+        if (err) { setError(err.message); return false }
+        await refresh()
+        return true
+      },
       addProduct: (input) => {
         if (!isOwner) {
           setError('Only the owner can add parts.')
