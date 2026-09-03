@@ -3,6 +3,7 @@ import { Minus, PackagePlus, Pencil, Plus, Search, Trash2, X } from 'lucide-reac
 import { money, percent } from '../lib/format'
 import { useShop } from '../store'
 import type { Product } from '../types'
+import { ModalPortal } from './ModalPortal'
 
 type Draft = {
   name: string
@@ -237,11 +238,12 @@ export function StockView() {
       </ul>
 
       {open && isOwner && (
-        <div className="modal-backdrop" role="presentation" onClick={closeForm}>
+        <ModalPortal onClose={closeForm}>
           <form
             className="modal panel"
-            onClick={(e) => e.stopPropagation()}
             onSubmit={onSubmit}
+            role="dialog"
+            aria-modal="true"
             aria-labelledby="product-form-title"
           >
             <div className="modal-head">
@@ -251,117 +253,118 @@ export function StockView() {
               </button>
             </div>
 
-            <label>
-              Name
-              <input
-                required
-                value={draft.name}
-                onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-                placeholder="e.g. Brake Pads (set)"
-                autoFocus
-              />
-            </label>
-            <div className="form-row">
+            <div className="modal-content">
               <label>
-                Cost price
+                Name
                 <input
                   required
-                  inputMode="decimal"
-                  value={draft.costPrice}
-                  onChange={(e) => setDraft((d) => ({ ...d, costPrice: e.target.value }))}
-                  placeholder="0.00"
+                  value={draft.name}
+                  onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+                  placeholder="e.g. Brake Pads (set)"
                 />
               </label>
-              <label>
-                Selling price
-                <input
-                  required
-                  inputMode="decimal"
-                  value={draft.price}
-                  onChange={(e) => setDraft((d) => ({ ...d, price: e.target.value }))}
-                  placeholder="0.00"
-                />
-              </label>
-              <label>
-                {editingId ? 'On hand (adjust in list)' : 'Initial on hand'}
-                <input
-                  required
-                  inputMode="numeric"
-                  disabled={Boolean(editingId)}
-                  value={draft.stock}
-                  onChange={(e) => setDraft((d) => ({ ...d, stock: e.target.value }))}
-                  placeholder="0"
-                />
-              </label>
-            </div>
-            <div className="pricing-preview">
-              <span>Profit per unit</span>
-              <strong>{money(Math.max(0, Number(draft.price) || 0) - Math.max(0, Number(draft.costPrice) || 0))}</strong>
-              <span>Customer price with tax</span>
-              <strong>
-                {money(
-                  (Number(draft.price) || 0) *
-                    (draft.taxable ? 1 + (Number(draft.taxRate) || 0) / 100 : 1),
-                )}
-              </strong>
-            </div>
-            {Number(draft.price) < Number(draft.costPrice) && (
-              <p className="field-warning">Warning: selling price is below cost.</p>
-            )}
-            <div className="form-row">
-              <label>
-                Low stock at
-                <input
-                  inputMode="numeric"
-                  value={draft.lowStockAt}
-                  onChange={(e) => setDraft((d) => ({ ...d, lowStockAt: e.target.value }))}
-                />
-              </label>
-              <label>
-                Part #
-                <input
-                  value={draft.sku}
-                  onChange={(e) => setDraft((d) => ({ ...d, sku: e.target.value }))}
-                  placeholder="Optional"
-                />
-              </label>
-            </div>
-            <div className="form-row">
-              <label>
-                Barcode
-                <input
-                  value={draft.barcode}
-                  onChange={(e) => setDraft((d) => ({ ...d, barcode: e.target.value }))}
-                  placeholder="Optional"
-                />
-              </label>
-              <label>
-                Tax rate %
-                <input
-                  inputMode="decimal"
-                  value={draft.taxRate}
-                  disabled={!draft.taxable}
-                  onChange={(e) => setDraft((d) => ({ ...d, taxRate: e.target.value }))}
-                />
-              </label>
-            </div>
-            <div className="check-row">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={draft.taxable}
-                  onChange={(e) => setDraft((d) => ({ ...d, taxable: e.target.checked }))}
-                />
-                Taxable by default
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={draft.isLabor}
-                  onChange={(e) => setDraft((d) => ({ ...d, isLabor: e.target.checked }))}
-                />
-                Labor / service
-              </label>
+              <div className="form-row">
+                <label>
+                  Cost price
+                  <input
+                    required
+                    inputMode="decimal"
+                    value={draft.costPrice}
+                    onChange={(e) => setDraft((d) => ({ ...d, costPrice: e.target.value }))}
+                    placeholder="0.00"
+                  />
+                </label>
+                <label>
+                  Selling price
+                  <input
+                    required
+                    inputMode="decimal"
+                    value={draft.price}
+                    onChange={(e) => setDraft((d) => ({ ...d, price: e.target.value }))}
+                    placeholder="0.00"
+                  />
+                </label>
+                <label>
+                  {editingId ? 'On hand (adjust in list)' : 'Initial on hand'}
+                  <input
+                    required
+                    inputMode="numeric"
+                    disabled={Boolean(editingId)}
+                    value={draft.stock}
+                    onChange={(e) => setDraft((d) => ({ ...d, stock: e.target.value }))}
+                    placeholder="0"
+                  />
+                </label>
+              </div>
+              <div className="pricing-preview">
+                <span>Profit per unit</span>
+                <strong>{money(Math.max(0, Number(draft.price) || 0) - Math.max(0, Number(draft.costPrice) || 0))}</strong>
+                <span>Customer price with tax</span>
+                <strong>
+                  {money(
+                    (Number(draft.price) || 0) *
+                      (draft.taxable ? 1 + (Number(draft.taxRate) || 0) / 100 : 1),
+                  )}
+                </strong>
+              </div>
+              {Number(draft.price) < Number(draft.costPrice) && (
+                <p className="field-warning">Warning: selling price is below cost.</p>
+              )}
+              <div className="form-row">
+                <label>
+                  Low stock at
+                  <input
+                    inputMode="numeric"
+                    value={draft.lowStockAt}
+                    onChange={(e) => setDraft((d) => ({ ...d, lowStockAt: e.target.value }))}
+                  />
+                </label>
+                <label>
+                  Part #
+                  <input
+                    value={draft.sku}
+                    onChange={(e) => setDraft((d) => ({ ...d, sku: e.target.value }))}
+                    placeholder="Optional"
+                  />
+                </label>
+              </div>
+              <div className="form-row">
+                <label>
+                  Barcode
+                  <input
+                    value={draft.barcode}
+                    onChange={(e) => setDraft((d) => ({ ...d, barcode: e.target.value }))}
+                    placeholder="Optional"
+                  />
+                </label>
+                <label>
+                  Tax rate %
+                  <input
+                    inputMode="decimal"
+                    value={draft.taxRate}
+                    disabled={!draft.taxable}
+                    onChange={(e) => setDraft((d) => ({ ...d, taxRate: e.target.value }))}
+                  />
+                </label>
+              </div>
+              <div className="check-row">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={draft.taxable}
+                    onChange={(e) => setDraft((d) => ({ ...d, taxable: e.target.checked }))}
+                  />
+                  Taxable by default
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={draft.isLabor}
+                    onChange={(e) => setDraft((d) => ({ ...d, isLabor: e.target.checked }))}
+                  />
+                  Labor / service
+                </label>
+              </div>
             </div>
 
             <div className="modal-actions">
@@ -373,7 +376,7 @@ export function StockView() {
               </button>
             </div>
           </form>
-        </div>
+        </ModalPortal>
       )}
     </div>
   )

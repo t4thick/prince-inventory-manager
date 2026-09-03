@@ -1,6 +1,7 @@
 import { Printer, X } from 'lucide-react'
 import { formatDateTime, money } from '../lib/format'
 import type { Sale } from '../types'
+import { ModalPortal } from './ModalPortal'
 
 const methodLabel = {
   cash: 'Cash',
@@ -20,11 +21,11 @@ export function ReceiptModal({ sale, onClose }: Props) {
   }
 
   return (
-    <div className="modal-backdrop receipt-backdrop" role="presentation" onClick={onClose}>
+    <ModalPortal onClose={onClose} className="receipt-backdrop">
       <div
         className="modal panel receipt-modal"
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
+        aria-modal="true"
         aria-labelledby="receipt-title"
       >
         <div className="modal-head no-print">
@@ -86,6 +87,6 @@ export function ReceiptModal({ sale, onClose }: Props) {
           </button>
         </div>
       </div>
-    </div>
+    </ModalPortal>
   )
 }

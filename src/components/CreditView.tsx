@@ -3,6 +3,7 @@ import { Banknote, Search, WalletCards, X } from 'lucide-react'
 import { formatDateTime, money } from '../lib/format'
 import { useShop } from '../store'
 import type { CollectedPaymentMethod, Sale } from '../types'
+import { ModalPortal } from './ModalPortal'
 
 export function CreditView() {
   const { sales, recordPayment } = useShop()
@@ -144,11 +145,12 @@ export function CreditView() {
       )}
 
       {selected && (
-        <div className="modal-backdrop" role="presentation" onClick={closePayment}>
+        <ModalPortal onClose={closePayment}>
           <form
             className="modal panel"
             onSubmit={submitPayment}
-            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
             aria-labelledby="payment-title"
           >
             <div className="modal-head">
@@ -160,34 +162,36 @@ export function CreditView() {
                 <X size={18} />
               </button>
             </div>
-            <label>
-              Amount
-              <input
-                required
-                inputMode="decimal"
-                value={amount}
-                onChange={(event) => setAmount(event.target.value)}
-              />
-            </label>
-            <label>
-              Payment method
-              <select
-                value={method}
-                onChange={(event) => setMethod(event.target.value as CollectedPaymentMethod)}
-              >
-                <option value="cash">Cash</option>
-                <option value="card">Card</option>
-                <option value="transfer">Transfer</option>
-              </select>
-            </label>
-            <label>
-              Note
-              <input
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-                placeholder="Optional"
-              />
-            </label>
+            <div className="modal-content">
+              <label>
+                Amount
+                <input
+                  required
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value)}
+                />
+              </label>
+              <label>
+                Payment method
+                <select
+                  value={method}
+                  onChange={(event) => setMethod(event.target.value as CollectedPaymentMethod)}
+                >
+                  <option value="cash">Cash</option>
+                  <option value="card">Card</option>
+                  <option value="transfer">Transfer</option>
+                </select>
+              </label>
+              <label>
+                Note
+                <input
+                  value={notes}
+                  onChange={(event) => setNotes(event.target.value)}
+                  placeholder="Optional"
+                />
+              </label>
+            </div>
             <div className="modal-actions">
               <button type="button" className="ghost-btn" onClick={closePayment}>Cancel</button>
               <button
@@ -204,7 +208,7 @@ export function CreditView() {
               </button>
             </div>
           </form>
-        </div>
+        </ModalPortal>
       )}
     </div>
   )

@@ -1707,12 +1707,26 @@ button.kpi-card:hover {
 .modal {
   width: min(100%, 460px);
   max-height: 90dvh;
-  overflow: auto;
+  overflow: hidden;
   padding: 1.2rem;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  animation: pop 0.22s ease both;
+}
+
+.modal-content,
+.receipt-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-content {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
-  animation: pop 0.22s ease both;
 }
 
 .modal label {
@@ -1733,6 +1747,10 @@ button.kpi-card:hover {
 .modal-actions {
   justify-content: flex-end;
   margin-top: 0.3rem;
+}
+
+.modal-head p {
+  margin: 0.2rem 0 0;
 }
 
 /* ---------- Receipt ---------- */
@@ -2490,25 +2508,54 @@ button.kpi-card:hover {
   }
 
   .modal-backdrop {
-    place-items: end stretch;
+    inset: auto 0;
+    top: var(--modal-viewport-top, 0);
+    height: var(--modal-viewport-height, 100dvh);
+    place-items: stretch;
     padding: 0;
+    overflow: hidden;
   }
 
   .modal {
+    --modal-side: max(1rem, env(safe-area-inset-left), env(safe-area-inset-right));
     width: 100%;
-    max-height: calc(100dvh - env(safe-area-inset-top) - 0.5rem);
-    padding: 1rem max(1rem, env(safe-area-inset-right))
-      calc(1rem + env(safe-area-inset-bottom))
-      max(1rem, env(safe-area-inset-left));
-    border-radius: 14px 14px 0 0;
+    max-width: none;
+    height: 100%;
+    max-height: 100%;
+    padding: 0 var(--modal-side);
+    gap: 0;
+    border: 0;
+    border-radius: 0;
     overscroll-behavior: contain;
+    animation: none;
+  }
+
+  .modal-head {
+    min-height: calc(3.75rem + env(safe-area-inset-top));
+    margin: 0 calc(0px - var(--modal-side));
+    padding: calc(0.6rem + env(safe-area-inset-top)) var(--modal-side) 0.6rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    z-index: 2;
+  }
+
+  .modal-content,
+  .receipt-body {
+    padding: 0.85rem 0 1rem;
+    scroll-padding-top: 0.85rem;
+    scroll-padding-bottom: 2rem;
+  }
+
+  .modal-content input:focus,
+  .modal-content select:focus {
+    scroll-margin-block: 5rem;
   }
 
   .modal-actions {
-    position: sticky;
-    bottom: calc(-1rem - env(safe-area-inset-bottom));
-    z-index: 1;
-    margin: 0 -1rem calc(-1rem - env(safe-area-inset-bottom));
+    position: relative;
+    bottom: auto;
+    z-index: 2;
+    margin: 0 calc(0px - var(--modal-side));
     padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
     background: var(--surface);
     border-top: 1px solid var(--line);
