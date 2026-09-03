@@ -61,10 +61,6 @@ export function ReceiptModal({ sale, onClose }: Props) {
             ))}
           </ul>
 
-          <div className="receipt-breakdown">
-            <p><span>Subtotal</span><span>{money(sale.subtotal)}</span></p>
-            <p><span>Tax</span><span>{money(sale.taxTotal)}</span></p>
-          </div>
           <div className="receipt-total">
             <span>Total · {methodLabel[sale.paymentMethod]}</span>
             <strong>{money(sale.total)}</strong>
