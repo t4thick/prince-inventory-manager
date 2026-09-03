@@ -2,6 +2,7 @@ import { Printer, X } from 'lucide-react'
 import { formatDateTime, money } from '../lib/format'
 import type { Sale } from '../types'
 import { ModalPortal } from './ModalPortal'
+import { StoreContact } from './StoreContact'
 
 const methodLabel = {
   cash: 'Cash',
@@ -38,6 +39,7 @@ export function ReceiptModal({ sale, onClose }: Props) {
         <div className="receipt-body" id="print-receipt">
           <header className="receipt-header">
             <strong className="receipt-shop">Prince Auto</strong>
+            <StoreContact />
             <span className="document-label">Sales receipt · GHS</span>
             <span className="receipt-meta">{formatDateTime(sale.createdAt)}</span>
             <span className="receipt-meta">{sale.receiptNumber}</span>

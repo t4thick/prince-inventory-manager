@@ -2900,6 +2900,20 @@ button.kpi-card:hover {
   }
 }
 
+.store-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 34ch;
+  font-style: normal;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.store-contact a { color: inherit; text-decoration: none; }
+.store-contact a:hover { text-decoration: underline; }
+.receipt-header .store-contact { margin: 0.5rem auto; }
+
 /* Retail product hierarchy and document styling */
 .product-price-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; }
 .stock-info .product-price-line strong { font-size: 1.12rem; color: var(--green); font-variant-numeric: tabular-nums; }

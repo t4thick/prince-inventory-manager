@@ -4,6 +4,7 @@ import { formatDateTime, money } from '../lib/format'
 import { useShop } from '../store'
 import type { CollectedPaymentMethod, Sale } from '../types'
 import { ModalPortal } from './ModalPortal'
+import { StoreContact } from './StoreContact'
 
 export function CreditView() {
   const { sales, payments, recordPayment } = useShop()
@@ -243,7 +244,7 @@ export function CreditView() {
             </div>
             <div id="print-statement" className="statement-sheet">
               <header className="statement-head">
-                <div><strong>Prince Auto</strong><span>Customer account statement</span></div>
+                <div><strong>Prince Auto</strong><StoreContact /><span>Customer account statement</span></div>
                 <div><span>Statement date</span><strong>{new Date().toLocaleDateString()}</strong></div>
               </header>
               <div className="statement-customer">
