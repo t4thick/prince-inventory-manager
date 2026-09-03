@@ -123,6 +123,7 @@ create policy "products read"
   using (public.is_authenticated_member());
 
 drop policy if exists "products owner write" on public.products;
+drop policy if exists "products owner insert" on public.products;
 create policy "products owner insert"
   on public.products for insert
   to authenticated
