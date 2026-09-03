@@ -6,6 +6,7 @@ import {
   ClipboardList,
   LayoutDashboard,
   LogOut,
+  Menu,
   Package,
   WalletCards,
   WifiOff,
@@ -15,15 +16,16 @@ import { AuthProvider, useAuth } from './auth'
 import { DashboardView } from './components/DashboardView'
 import { CreditView } from './components/CreditView'
 import { LoginView } from './components/LoginView'
+import { MoreView } from './components/MoreView'
 import { ReportsView } from './components/ReportsView'
 import { SalesView } from './components/SalesView'
 import { SellView } from './components/SellView'
 import { StockView } from './components/StockView'
 import { ShopProvider, useShop } from './store'
 
-type Tab = 'dashboard' | 'sell' | 'stock' | 'sales' | 'credit' | 'reports'
+type Tab = 'dashboard' | 'sell' | 'stock' | 'sales' | 'credit' | 'reports' | 'more'
 
-const navItems: { id: Tab; label: string; icon: typeof Wrench }[] = [
+const desktopNavItems: { id: Tab; label: string; icon: typeof Wrench }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'sell', label: 'Checkout', icon: Wrench },
   { id: 'stock', label: 'Parts', icon: Package },
@@ -32,8 +34,17 @@ const navItems: { id: Tab; label: string; icon: typeof Wrench }[] = [
   { id: 'reports', label: 'Reports', icon: BarChart3 },
 ]
 
+const mobileNavItems: { id: Tab; label: string; icon: typeof Wrench }[] = [
+  { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+  { id: 'sell', label: 'Checkout', icon: Wrench },
+  { id: 'stock', label: 'Parts', icon: Package },
+  { id: 'sales', label: 'Jobs', icon: ClipboardList },
+  { id: 'more', label: 'More', icon: Menu },
+]
+
 function Shell() {
   const [tab, setTab] = useState<Tab>('dashboard')
+  const mobileTab = tab === 'credit' || tab === 'reports' ? 'more' : tab
   const [showInstall, setShowInstall] = useState(shouldShowInstallPrompt)
   const { profile, signOut } = useAuth()
   const { loading, error, offlinePending, clearError } = useShop()
@@ -48,7 +59,7 @@ function Shell() {
         </div>
 
         <nav className="side-nav">
-          {navItems.map(({ id, label, icon: Icon }) => (
+          {desktopNavItems.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               type="button"
@@ -82,7 +93,9 @@ function Shell() {
             <span className="brand-word">Prince</span>
             <span className="brand-sub">Auto</span>
           </div>
-          <div className="topbar-title">{navItems.find((n) => n.id === tab)?.label}</div>
+          <div className="topbar-title">
+            {[...desktopNavItems, ...mobileNavItems].find((item) => item.id === tab)?.label}
+          </div>
           <div className="topbar-right">
             {offlinePending > 0 && (
               <span className="sync-chip" title="Sales waiting to sync">
@@ -133,18 +146,19 @@ function Shell() {
               {tab === 'sales' && <SalesView />}
               {tab === 'credit' && <CreditView />}
               {tab === 'reports' && <ReportsView />}
+              {tab === 'more' && <MoreView onNavigate={setTab} />}
             </>
           )}
         </main>
 
         <nav className="tab-bar" aria-label="Main">
-          {navItems.map(({ id, label, icon: Icon }) => (
+          {mobileNavItems.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               type="button"
-              className={`tab ${tab === id ? 'active' : ''}`}
+              className={`tab ${mobileTab === id ? 'active' : ''}`}
               onClick={() => setTab(id)}
-              aria-current={tab === id ? 'page' : undefined}
+              aria-current={mobileTab === id ? 'page' : undefined}
             >
               <Icon size={20} aria-hidden />
               {label}
