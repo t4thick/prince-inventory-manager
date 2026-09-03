@@ -2900,9 +2900,46 @@ button.kpi-card:hover {
   }
 }
 
+/* Retail product hierarchy and document styling */
+.product-price-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; }
+.stock-info .product-price-line strong { font-size: 1.12rem; color: var(--green); font-variant-numeric: tabular-nums; }
+.product-price-line span, .product-financials { font-size: 0.8125rem; color: var(--muted); }
+.product-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.35rem 0; }
+.product-tags > span { padding: 0.2rem 0.55rem; border: 1px solid var(--line); border-radius: 6px; font-size: 0.8125rem; color: var(--muted); }
+.product-tags .stock-warning { color: var(--red); background: var(--red-soft); border-color: transparent; }
+.stock-row { padding: 1rem; gap: 1rem; }
+.stock-info > strong { font-size: 1.05rem; line-height: 1.4; overflow-wrap: anywhere; }
+.form-section-title { margin: 0.75rem 0 0; padding-top: 0.75rem; border-top: 1px solid var(--line); font-size: 0.875rem; color: var(--muted); }
+.form-section-title:first-child { margin-top: 0; padding-top: 0; border: 0; }
+.document-label { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.75rem; color: var(--muted); }
+.receipt-item-name { display: flex; flex-direction: column; gap: 0.3rem; }
+.receipt-item-name small { font-size: 0.8125rem; color: var(--muted); }
+.receipt-lines li { padding: 0.8rem 0; align-items: baseline; }
+.receipt-total strong, .statement-summary strong { font-variant-numeric: tabular-nums; }
+.statement-head { padding-bottom: 1.25rem; border-bottom: 2px solid var(--ink); }
+.statement-head > div { display: flex; gap: 0.35rem; }
+.statement-head > div:first-child > strong { font-size: 1.4rem; }
+.statement-table td { padding: 0.75rem 0.55rem; font-variant-numeric: tabular-nums; }
+.statement-table th:nth-child(n+3), .statement-table td:nth-child(n+3) { text-align: right; }
+@media (max-width: 640px) {
+  .stock-row { padding: 0.9rem; }
+  .statement-sheet { padding: 0.75rem 0; }
+  .statement-head { flex-wrap: wrap; }
+  .balance-actions { flex-wrap: wrap; }
+}
+
 /* ---------- Print (receipt) ---------- */
 
 @media print {
+  .modal-backdrop, .modal, .receipt-body, .statement-modal, .statement-sheet {
+    position: static !important;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    box-shadow: none !important;
+  }
+  .statement-table thead { display: table-header-group; }
+  .statement-table tr, .receipt-lines li { break-inside: avoid; }
   body * {
     visibility: hidden;
   }

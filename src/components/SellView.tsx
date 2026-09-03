@@ -216,7 +216,7 @@ export function SellView() {
                   <span className="tile-price">{money(product.price)}</span>
                   <span className={`tile-stock ${low ? 'is-low' : ''}`}>
                     {isLabor ? 'Labor' : out ? 'Out' : `${product.stock} in stock`}
-                    {inCart > 0 ? ` · ${inCart} on ticket` : ''}
+                    {inCart > 0 ? ` · ${inCart} in cart` : ''}
                   </span>
                 </button>
               )
@@ -227,9 +227,9 @@ export function SellView() {
           </div>
         </section>
 
-        <aside className="cart panel" aria-label="Job ticket">
+        <aside className="cart panel" aria-label="Cart">
           <div className="cart-head">
-            <h2>Job ticket</h2>
+            <h2>Cart</h2>
             <span>{itemCount} line items</span>
           </div>
 

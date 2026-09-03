@@ -247,7 +247,7 @@ export function ReportsView() {
         </div>
         <div className="kpi-card">
           <div className="kpi-body">
-            <span className="kpi-label">Avg ticket</span>
+            <span className="kpi-label">Average sale</span>
             <strong className="kpi-value">{money(report.avgTicket)}</strong>
           </div>
         </div>

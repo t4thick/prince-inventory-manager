@@ -29,7 +29,7 @@ export function ReceiptModal({ sale, onClose }: Props) {
         aria-labelledby="receipt-title"
       >
         <div className="modal-head no-print">
-          <h2 id="receipt-title">Job receipt</h2>
+          <h2 id="receipt-title">Sales receipt</h2>
           <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">
             <X size={18} />
           </button>
@@ -38,6 +38,7 @@ export function ReceiptModal({ sale, onClose }: Props) {
         <div className="receipt-body" id="print-receipt">
           <header className="receipt-header">
             <strong className="receipt-shop">Prince Auto</strong>
+            <span className="document-label">Sales receipt · GHS</span>
             <span className="receipt-meta">{formatDateTime(sale.createdAt)}</span>
             <span className="receipt-meta">{sale.receiptNumber}</span>
           </header>
@@ -53,14 +54,19 @@ export function ReceiptModal({ sale, onClose }: Props) {
           <ul className="receipt-lines">
             {sale.items.map((item) => (
               <li key={item.productId}>
-                <span>
-                  {item.qty}× {item.name}
+                <span className="receipt-item-name">
+                  <strong>{item.name}</strong>
+                  <small>{item.qty} × {money(item.price)}</small>
                 </span>
                 <span>{money(item.lineTotal)}</span>
               </li>
             ))}
           </ul>
 
+          <div className="receipt-breakdown">
+            <p><span>Subtotal</span><span>{money(sale.subtotal)}</span></p>
+            <p><span>Tax</span><span>{money(sale.taxTotal)}</span></p>
+          </div>
           <div className="receipt-total">
             <span>Total · {methodLabel[sale.paymentMethod]}</span>
             <strong>{money(sale.total)}</strong>

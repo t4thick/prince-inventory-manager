@@ -186,7 +186,7 @@ export function DashboardView({ onNavigate }: Props) {
             <AlertTriangle size={20} aria-hidden />
           </span>
           <div className="kpi-body">
-            <span className="kpi-label">Parts low / out</span>
+            <span className="kpi-label">Products low / out</span>
             <strong className="kpi-value">
               {data.lowParts.length}
               {data.outCount > 0 ? ` · ${data.outCount} out` : ''}
@@ -285,7 +285,7 @@ export function DashboardView({ onNavigate }: Props) {
               <Package size={16} aria-hidden /> Inventory
             </h2>
             <button type="button" className="link-btn" onClick={() => onNavigate('stock')}>
-              View parts
+              View products
             </button>
           </div>
           <div className="inv-summary">
@@ -300,7 +300,7 @@ export function DashboardView({ onNavigate }: Props) {
               <strong>{data.unitsOnHand}</strong>
             </div>
             <div className="inv-stat">
-              <span>Part SKUs</span>
+              <span>Product SKUs</span>
               <strong>{data.partsCount}</strong>
             </div>
             <div className="inv-stat">

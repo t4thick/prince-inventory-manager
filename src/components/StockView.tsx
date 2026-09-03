@@ -173,8 +173,8 @@ export function StockView() {
     <div className="view stock-view">
       <header className="view-header">
         <div>
-          <p className="eyebrow">Parts shelf</p>
-          <h1>Parts</h1>
+          <p className="eyebrow">Inventory</p>
+          <h1>Products</h1>
         </div>
         {isOwner && (
           <button type="button" className="primary-btn" onClick={openCreate}>
@@ -194,7 +194,7 @@ export function StockView() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Find by name, part #, category, brand, or shelf"
-          aria-label="Search parts"
+          aria-label="Search products"
         />
       </div>
 
@@ -207,15 +207,16 @@ export function StockView() {
             <li key={product.id} className={`stock-row ${low ? 'is-low' : ''}`}>
               <div className="stock-info">
                 <strong>{product.name}</strong>
-                <span className="meta">
-                  {product.sku} · {money(product.price)}
-                  {product.brand ? ` · ${product.brand}` : ''}
-                  {product.category ? ` · ${product.category}` : ''}
-                  {product.unit ? ` · per ${product.unit.toLowerCase()}` : ''}
-                  {product.shelfLocation ? ` · Shelf ${product.shelfLocation}` : ''}
-                  {isOwner ? ` · Cost ${money(product.costPrice)} · Profit ${money(product.price - product.costPrice)}` : ''}
-                  {product.taxable ? ` · ${percent(product.taxRate)} tax` : ' · no tax'}
-                  {isLabor ? ' · labor rate' : ''}
+                <div className="product-price-line"><strong>{money(product.price)}</strong><span>per {product.unit.toLowerCase()} · {product.sku}</span></div>
+                <div className="product-tags">
+                  {product.category && <span>{product.category}</span>}
+                  {product.brand && <span>{product.brand}</span>}
+                  {product.shelfLocation && <span>Shelf {product.shelfLocation}</span>}
+                  {low && <span className="stock-warning">{out ? 'Out of stock' : 'Low stock'}</span>}
+                </div>
+                <span className="meta product-financials">
+                  {isOwner && <>Cost {money(product.costPrice)} · Profit {money(product.price - product.costPrice)} · </>}
+                  {product.taxable ? `${percent(product.taxRate)} tax` : 'No tax'}
                 </span>
               </div>
               <div className="stock-qty" aria-live="polite">
@@ -269,7 +270,7 @@ export function StockView() {
           )
         })}
         {filtered.length === 0 && (
-          <li className="empty-note panel">No parts yet. Add what Prince keeps on the shelf.</li>
+          <li className="empty-note panel">No products yet. Add what Prince keeps on the shelf.</li>
         )}
       </ul>
 
@@ -290,6 +291,7 @@ export function StockView() {
             </div>
 
             <div className="modal-content">
+              <h3 className="form-section-title">Product details</h3>
               <label>
                 Name
                 <input
@@ -339,9 +341,10 @@ export function StockView() {
                   />
                 </label>
               </div>
+              <h3 className="form-section-title">Pricing &amp; quantity</h3>
               <div className="form-row">
                 <label>
-                  Cost price
+                  Cost price (GH₵)
                   <input
                     required
                     inputMode="decimal"
@@ -351,7 +354,7 @@ export function StockView() {
                   />
                 </label>
                 <label>
-                  Selling price
+                  Selling price (GH₵)
                   <input
                     required
                     inputMode="decimal"
@@ -388,6 +391,7 @@ export function StockView() {
               {Number(draft.price) < Number(draft.costPrice) && (
                 <p className="field-warning">Warning: selling price is below cost.</p>
               )}
+              <h3 className="form-section-title">Stock alerts &amp; tax</h3>
               <div className="form-row">
                 <label>
                   Low stock at

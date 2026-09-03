@@ -29,7 +29,7 @@ type Tab = 'dashboard' | 'sell' | 'stock' | 'sales' | 'credit' | 'reports' | 'mo
 const desktopNavItems: { id: Tab; label: string; icon: typeof Wrench }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'sell', label: 'Checkout', icon: Wrench },
-  { id: 'stock', label: 'Parts', icon: Package },
+  { id: 'stock', label: 'Products', icon: Package },
   { id: 'sales', label: 'Sales', icon: ClipboardList },
   { id: 'credit', label: 'Balances', icon: WalletCards },
   { id: 'reports', label: 'Reports', icon: BarChart3 },
@@ -38,7 +38,7 @@ const desktopNavItems: { id: Tab; label: string; icon: typeof Wrench }[] = [
 const mobileNavItems: { id: Tab; label: string; icon: typeof Wrench }[] = [
   { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
   { id: 'sell', label: 'Checkout', icon: Wrench },
-  { id: 'stock', label: 'Parts', icon: Package },
+  { id: 'stock', label: 'Products', icon: Package },
   { id: 'sales', label: 'Sales', icon: ClipboardList },
   { id: 'more', label: 'More', icon: Menu },
 ]
