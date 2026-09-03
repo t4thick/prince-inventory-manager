@@ -1,29 +1,30 @@
 :root {
-  --bg: #f4f5f7;
+  --bg: #f6f7f8;
   --surface: #ffffff;
-  --sidebar: #1c2430;
-  --sidebar-soft: #252f3d;
-  --ink: #111827;
-  --muted: #6b7280;
-  --line: #e5e7eb;
-  --accent: #dc2626;
-  --accent-deep: #b91c1c;
-  --accent-soft: rgba(220, 38, 38, 0.1);
+  --surface-raised: #ffffff;
+  --sidebar: #181a1f;
+  --sidebar-soft: #24272e;
+  --ink: #191b20;
+  --muted: #686b73;
+  --line: #e1e3e6;
+  --accent: #c8242d;
+  --accent-deep: #a91e26;
+  --accent-soft: rgba(200, 36, 45, 0.09);
   --teal: var(--accent);
   --teal-deep: var(--accent-deep);
   --teal-soft: var(--accent-soft);
-  --blue: #2563eb;
-  --blue-soft: rgba(37, 99, 235, 0.1);
-  --green: #16a34a;
-  --green-soft: rgba(22, 163, 74, 0.1);
-  --orange: #ea580c;
-  --orange-soft: rgba(234, 88, 12, 0.12);
-  --red: #dc2626;
-  --red-soft: rgba(220, 38, 38, 0.1);
-  --shadow: 0 1px 2px rgba(22, 32, 46, 0.05), 0 4px 16px rgba(22, 32, 46, 0.06);
-  --radius: 12px;
-  --font: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-display: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+  --blue: #2f63b7;
+  --blue-soft: rgba(47, 99, 183, 0.09);
+  --green: #22834e;
+  --green-soft: rgba(34, 131, 78, 0.09);
+  --orange: #b65a19;
+  --orange-soft: rgba(182, 90, 25, 0.1);
+  --red: #c8242d;
+  --red-soft: rgba(200, 36, 45, 0.09);
+  --shadow: 0 1px 2px rgba(24, 26, 31, 0.06);
+  --radius: 10px;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
   color-scheme: light dark;
   color: var(--ink);
   background: var(--bg);
@@ -128,7 +129,7 @@ input:focus {
 
 .brand-word {
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: 750;
   font-size: 1.55rem;
   letter-spacing: -0.03em;
   color: #fff;
@@ -344,9 +345,10 @@ input:focus {
 .view h1 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.55rem, 2.5vw, 1.95rem);
-  letter-spacing: -0.02em;
-  line-height: 1.05;
+  font-size: clamp(1.5rem, 2.5vw, 1.85rem);
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
 }
 
 /* ---------- Cards ---------- */
@@ -360,7 +362,7 @@ input:focus {
 }
 
 .card {
-  padding: 1.1rem 1.2rem;
+  padding: 1rem 1.05rem;
 }
 
 .card-head {
@@ -438,8 +440,8 @@ input:focus {
 }
 
 button.kpi-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(220, 38, 38, 0.35);
+  transform: translateY(-1px);
+  border-color: #c9ccd1;
 }
 
 .kpi-card.kpi-alert {
@@ -497,7 +499,7 @@ button.kpi-card:hover {
 
 .kpi-value {
   font-size: 1.3rem;
-  font-weight: 800;
+  font-weight: 750;
   letter-spacing: -0.02em;
 }
 
@@ -655,7 +657,7 @@ button.kpi-card:hover {
 
 .inv-stat strong {
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 750;
   letter-spacing: -0.01em;
 }
 
@@ -994,7 +996,7 @@ button.kpi-card:hover {
 
 .tile-price {
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 750;
   letter-spacing: -0.01em;
 }
 
@@ -1205,7 +1207,7 @@ button.kpi-card:hover {
   font-weight: 700;
   font-size: 0.92rem;
   letter-spacing: -0.01em;
-  box-shadow: 0 1px 3px rgba(185, 28, 28, 0.35);
+  box-shadow: none;
 }
 
 .primary-btn:hover:not(:disabled) {
@@ -1274,7 +1276,7 @@ button.kpi-card:hover {
 
 .cart-totals .grand-total strong {
   font-size: 1.4rem;
-  font-weight: 800;
+  font-weight: 750;
   letter-spacing: -0.02em;
 }
 
@@ -1457,7 +1459,7 @@ button.kpi-card:hover {
 
 .sale-top strong {
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 750;
 }
 
 .void-badge {
@@ -1774,7 +1776,7 @@ button.kpi-card:hover {
 .receipt-shop {
   font-family: var(--font-display);
   font-size: 1.3rem;
-  font-weight: 800;
+  font-weight: 750;
 }
 
 .receipt-meta {
@@ -2608,19 +2610,26 @@ button.kpi-card:hover {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #111827;
-    --surface: #1f2937;
-    --sidebar: #0b1220;
-    --sidebar-soft: #172033;
-    --ink: #f9fafb;
-    --muted: #a7b0be;
-    --line: #374151;
-    --accent-soft: rgba(239, 68, 68, 0.16);
-    --blue-soft: rgba(59, 130, 246, 0.17);
-    --green-soft: rgba(34, 197, 94, 0.16);
-    --orange-soft: rgba(249, 115, 22, 0.17);
-    --red-soft: rgba(239, 68, 68, 0.16);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.22), 0 8px 24px rgba(0, 0, 0, 0.18);
+    --bg: #121418;
+    --surface: #1b1e24;
+    --surface-raised: #20242b;
+    --sidebar: #0d0f12;
+    --sidebar-soft: #202329;
+    --ink: #f1f2f4;
+    --muted: #a3a6ad;
+    --line: #30343b;
+    --accent: #e1434c;
+    --accent-deep: #ff747b;
+    --accent-soft: rgba(225, 67, 76, 0.14);
+    --blue: #72a1ed;
+    --blue-soft: rgba(114, 161, 237, 0.13);
+    --green: #65c68d;
+    --green-soft: rgba(101, 198, 141, 0.13);
+    --orange: #e99a62;
+    --orange-soft: rgba(233, 154, 98, 0.13);
+    --red: #f05b63;
+    --red-soft: rgba(240, 91, 99, 0.13);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
   }
 
   .icon-btn,
@@ -2780,7 +2789,7 @@ button.kpi-card:hover {
   margin: 0 0 0.35rem;
   font-family: var(--font-display);
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 750;
 }
 
 .install-prompt p {
