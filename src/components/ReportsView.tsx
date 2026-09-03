@@ -120,7 +120,7 @@ export function ReportsView() {
 
   function exportCsv() {
     const rows: string[][] = [
-      ['Receipt', 'Date', 'Worker', 'Customer', 'Vehicle', 'Payment', 'Status', 'Item', 'Qty', 'Unit price', 'Subtotal', 'Tax', 'Total', 'Cost', 'Gross profit', 'Paid', 'Balance'],
+      ['Receipt', 'Date', 'Worker', 'Customer', 'Vehicle', 'Payment', 'Status', 'Item', 'Qty', 'Unit price (GHS)', 'Subtotal (GHS)', 'Tax (GHS)', 'Total (GHS)', 'Cost (GHS)', 'Gross profit (GHS)', 'Paid (GHS)', 'Balance (GHS)'],
     ]
     for (const s of report.inRange) {
       for (const item of s.items) {

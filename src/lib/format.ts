@@ -3,9 +3,11 @@ export function uid(prefix = 'id'): string {
 }
 
 export function money(amount: number): string {
-  return new Intl.NumberFormat(undefined, {
+  return new Intl.NumberFormat('en-GH', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'GHS',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount)
 }
 
