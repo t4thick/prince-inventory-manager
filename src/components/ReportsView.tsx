@@ -5,59 +5,97 @@ import { useShop } from '../store'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
-type Range = 'today' | '7d' | '30d' | 'all'
+type Range = 'today' | '7d' | '30d' | 'month' | 'year' | 'all'
 
 const ranges: { id: Range; label: string }[] = [
   { id: 'today', label: 'Today' },
   { id: '7d', label: '7 days' },
   { id: '30d', label: '30 days' },
+  { id: 'month', label: 'This month' },
+  { id: 'year', label: 'This year' },
   { id: 'all', label: 'All time' },
 ]
 
-const methodLabel = { cash: 'Cash', card: 'Card', transfer: 'Transfer' } as const
+const methodLabel = { cash: 'Cash', card: 'Card', transfer: 'Transfer', credit: 'Credit' } as const
 
 export function ReportsView() {
-  const { sales, isOwner } = useShop()
+  const { sales, payments, isOwner } = useShop()
   const [range, setRange] = useState<Range>('7d')
 
   const report = useMemo(() => {
     const active = sales.filter((s) => !s.voidedAt)
     const now = Date.now()
 
-    const inRange = active.filter((s) => {
+    const isInRange = (iso: string) => {
       if (range === 'all') return true
-      if (range === 'today') return s.createdAt.startsWith(todayKey())
+      const date = new Date(iso)
+      if (range === 'today') return todayKey(date) === todayKey()
+      const current = new Date()
+      if (range === 'month') {
+        return (
+          date.getFullYear() === current.getFullYear() &&
+          date.getMonth() === current.getMonth()
+        )
+      }
+      if (range === 'year') return date.getFullYear() === current.getFullYear()
       const days = range === '7d' ? 7 : 30
-      return new Date(s.createdAt).getTime() >= now - days * DAY_MS
-    })
+      return date.getTime() >= now - days * DAY_MS
+    }
+
+    const inRange = active.filter((sale) => isInRange(sale.createdAt))
+    const activePayments = payments.filter(
+      (payment) => !payment.reversedAt && isInRange(payment.createdAt),
+    )
 
     const revenue = inRange.reduce((sum, s) => sum + s.total, 0)
+    const subtotal = inRange.reduce((sum, s) => sum + s.subtotal, 0)
+    const tax = inRange.reduce((sum, s) => sum + s.taxTotal, 0)
+    const cost = inRange.reduce((sum, s) => sum + s.costTotal, 0)
+    const profit = inRange.reduce((sum, s) => sum + s.grossProfit, 0)
+    const salesWithLedger = new Set(payments.map((payment) => payment.saleId))
+    const collected =
+      activePayments.reduce((sum, payment) => sum + payment.amount, 0) +
+      inRange
+        .filter((sale) => !salesWithLedger.has(sale.id))
+        .reduce((sum, sale) => sum + sale.amountPaid, 0)
+    const outstanding = inRange.reduce((sum, s) => sum + s.balanceDue, 0)
     const items = inRange.reduce((sum, s) => sum + s.items.reduce((n, i) => n + i.qty, 0), 0)
     const avgTicket = inRange.length > 0 ? revenue / inRange.length : 0
 
-    const byMethod = new Map<string, { jobs: number; revenue: number }>()
+    const byMethod = new Map<string, { jobs: number; revenue: number; profit: number }>()
     for (const s of inRange) {
-      const cur = byMethod.get(s.paymentMethod) ?? { jobs: 0, revenue: 0 }
+      const cur = byMethod.get(s.paymentMethod) ?? { jobs: 0, revenue: 0, profit: 0 }
       cur.jobs += 1
       cur.revenue += s.total
+      cur.profit += s.grossProfit
       byMethod.set(s.paymentMethod, cur)
     }
 
-    const byWorker = new Map<string, { jobs: number; revenue: number }>()
+    const byWorker = new Map<string, { jobs: number; revenue: number; profit: number }>()
     for (const s of inRange) {
       const name = s.workerName || 'Unknown'
-      const cur = byWorker.get(name) ?? { jobs: 0, revenue: 0 }
+      const cur = byWorker.get(name) ?? { jobs: 0, revenue: 0, profit: 0 }
       cur.jobs += 1
       cur.revenue += s.total
+      cur.profit += s.grossProfit
       byWorker.set(name, cur)
     }
 
-    const byItem = new Map<string, { qty: number; revenue: number }>()
+    const byItem = new Map<string, { qty: number; revenue: number; profit: number }>()
+    const byDay = new Map<string, { jobs: number; sales: number; tax: number; profit: number }>()
     for (const s of inRange) {
+      const day = todayKey(new Date(s.createdAt))
+      const daily = byDay.get(day) ?? { jobs: 0, sales: 0, tax: 0, profit: 0 }
+      daily.jobs += 1
+      daily.sales += s.total
+      daily.tax += s.taxTotal
+      daily.profit += s.grossProfit
+      byDay.set(day, daily)
       for (const item of s.items) {
-        const cur = byItem.get(item.name) ?? { qty: 0, revenue: 0 }
+        const cur = byItem.get(item.name) ?? { qty: 0, revenue: 0, profit: 0 }
         cur.qty += item.qty
         cur.revenue += item.qty * item.price
+        cur.profit += item.grossProfit
         byItem.set(item.name, cur)
       }
     }
@@ -65,31 +103,45 @@ export function ReportsView() {
     return {
       inRange,
       revenue,
+      subtotal,
+      tax,
+      cost,
+      profit,
+      collected,
+      outstanding,
       items,
       avgTicket,
       byMethod: [...byMethod.entries()].sort((a, b) => b[1].revenue - a[1].revenue),
       byWorker: [...byWorker.entries()].sort((a, b) => b[1].revenue - a[1].revenue),
       byItem: [...byItem.entries()].sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 12),
+      byDay: [...byDay.entries()].sort((a, b) => b[0].localeCompare(a[0])),
     }
-  }, [sales, range])
+  }, [sales, payments, range])
 
   function exportCsv() {
     const rows: string[][] = [
-      ['Sale ID', 'Date', 'Worker', 'Customer', 'Vehicle', 'Payment', 'Item', 'Qty', 'Unit price', 'Line total'],
+      ['Receipt', 'Date', 'Worker', 'Customer', 'Vehicle', 'Payment', 'Status', 'Item', 'Qty', 'Unit price', 'Subtotal', 'Tax', 'Total', 'Cost', 'Gross profit', 'Paid', 'Balance'],
     ]
     for (const s of report.inRange) {
       for (const item of s.items) {
         rows.push([
-          s.id,
+          s.receiptNumber,
           s.createdAt,
           s.workerName,
           s.customerName,
           s.vehicleInfo,
           s.paymentMethod,
+          s.paymentStatus,
           item.name,
           String(item.qty),
           item.price.toFixed(2),
-          (item.qty * item.price).toFixed(2),
+          item.lineSubtotal.toFixed(2),
+          item.taxAmount.toFixed(2),
+          item.lineTotal.toFixed(2),
+          item.lineCost.toFixed(2),
+          item.grossProfit.toFixed(2),
+          s.amountPaid.toFixed(2),
+          s.balanceDue.toFixed(2),
         ])
       }
     }
@@ -138,8 +190,48 @@ export function ReportsView() {
       <div className="kpi-grid">
         <div className="kpi-card">
           <div className="kpi-body">
-            <span className="kpi-label">Revenue</span>
+            <span className="kpi-label">Total sales</span>
             <strong className="kpi-value">{money(report.revenue)}</strong>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-body">
+            <span className="kpi-label">Sales before tax</span>
+            <strong className="kpi-value">{money(report.subtotal)}</strong>
+          </div>
+        </div>
+        {isOwner && (
+          <>
+            <div className="kpi-card">
+              <div className="kpi-body">
+                <span className="kpi-label">Gross profit</span>
+                <strong className="kpi-value">{money(report.profit)}</strong>
+              </div>
+            </div>
+            <div className="kpi-card">
+              <div className="kpi-body">
+                <span className="kpi-label">COGS</span>
+                <strong className="kpi-value">{money(report.cost)}</strong>
+              </div>
+            </div>
+          </>
+        )}
+        <div className="kpi-card">
+          <div className="kpi-body">
+            <span className="kpi-label">Tax collected</span>
+            <strong className="kpi-value">{money(report.tax)}</strong>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-body">
+            <span className="kpi-label">Collected</span>
+            <strong className="kpi-value">{money(report.collected)}</strong>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-body">
+            <span className="kpi-label">Balance due</span>
+            <strong className="kpi-value">{money(report.outstanding)}</strong>
           </div>
         </div>
         <div className="kpi-card">
@@ -176,6 +268,7 @@ export function ReportsView() {
                   <th>Method</th>
                   <th className="num">Jobs</th>
                   <th className="num">Revenue</th>
+                  {isOwner && <th className="num">Profit</th>}
                 </tr>
               </thead>
               <tbody>
@@ -184,6 +277,7 @@ export function ReportsView() {
                     <td>{methodLabel[method as keyof typeof methodLabel] ?? method}</td>
                     <td className="num">{row.jobs}</td>
                     <td className="num">{money(row.revenue)}</td>
+                    {isOwner && <td className="num">{money(row.profit)}</td>}
                   </tr>
                 ))}
               </tbody>
@@ -200,6 +294,7 @@ export function ReportsView() {
                   <th>Worker</th>
                   <th className="num">Jobs</th>
                   <th className="num">Revenue</th>
+                  {isOwner && <th className="num">Profit</th>}
                 </tr>
               </thead>
               <tbody>
@@ -208,6 +303,7 @@ export function ReportsView() {
                     <td>{name}</td>
                     <td className="num">{row.jobs}</td>
                     <td className="num">{money(row.revenue)}</td>
+                    {isOwner && <td className="num">{money(row.profit)}</td>}
                   </tr>
                 ))}
               </tbody>
@@ -224,6 +320,7 @@ export function ReportsView() {
                   <th>Item</th>
                   <th className="num">Qty</th>
                   <th className="num">Revenue</th>
+                  {isOwner && <th className="num">Profit</th>}
                 </tr>
               </thead>
               <tbody>
@@ -232,6 +329,35 @@ export function ReportsView() {
                     <td>{name}</td>
                     <td className="num">{row.qty}</td>
                     <td className="num">{money(row.revenue)}</td>
+                    {isOwner && <td className="num">{money(row.profit)}</td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          <section className="card report-items" aria-label="Daily financial summary">
+            <div className="card-head">
+              <h2>Daily summary</h2>
+            </div>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th className="num">Jobs</th>
+                  <th className="num">Sales</th>
+                  <th className="num">Tax</th>
+                  {isOwner && <th className="num">Profit</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {report.byDay.map(([day, row]) => (
+                  <tr key={day}>
+                    <td>{day}</td>
+                    <td className="num">{row.jobs}</td>
+                    <td className="num">{money(row.sales)}</td>
+                    <td className="num">{money(row.tax)}</td>
+                    {isOwner && <td className="num">{money(row.profit)}</td>}
                   </tr>
                 ))}
               </tbody>

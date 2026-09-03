@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Banknote, CreditCard, Minus, Plus, Search, Smartphone, Trash2 } from 'lucide-react'
+import { Banknote, CreditCard, Minus, Plus, Search, Smartphone, Trash2, WalletCards } from 'lucide-react'
+import { calculateLine, calculateSaleTotals } from '../lib/finance'
 import { money } from '../lib/format'
 import { isOnline } from '../lib/offline'
 import { useShop } from '../store'
@@ -10,15 +11,22 @@ const methods: { id: PaymentMethod; label: string; icon: typeof Banknote }[] = [
   { id: 'cash', label: 'Cash', icon: Banknote },
   { id: 'card', label: 'Card', icon: CreditCard },
   { id: 'transfer', label: 'Transfer', icon: Smartphone },
+  { id: 'credit', label: 'Pay later', icon: WalletCards },
 ]
 
 export function SellView() {
-  const { products, checkout, offlinePending } = useShop()
+  const { products, customers, checkout, offlinePending, isOwner } = useShop()
   const [query, setQuery] = useState('')
   const [cart, setCart] = useState<CartLine[]>([])
   const [method, setMethod] = useState<PaymentMethod>('cash')
+  const [customerId, setCustomerId] = useState<string | null>(null)
   const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
   const [vehicleInfo, setVehicleInfo] = useState('')
+  const [dueDate, setDueDate] = useState('')
+  const [notes, setNotes] = useState('')
+  const [amountPaid, setAmountPaid] = useState('0')
+  const [initialMethod, setInitialMethod] = useState<'cash' | 'card' | 'transfer'>('cash')
   const [flash, setFlash] = useState<string | null>(null)
   const [receipt, setReceipt] = useState<Sale | null>(null)
   const [paying, setPaying] = useState(false)
@@ -28,7 +36,10 @@ export function SellView() {
     const list = [...products].sort((a, b) => a.name.localeCompare(b.name))
     if (!q) return list
     return list.filter(
-      (p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q),
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q) ||
+        p.barcode.toLowerCase().includes(q),
     )
   }, [products, query])
 
@@ -44,7 +55,17 @@ export function SellView() {
     [cart, products],
   )
 
-  const total = detailed.reduce((sum, line) => sum + line.product.price * line.qty, 0)
+  const calculatedLines = detailed.map((line) =>
+    calculateLine({
+      unitPrice: line.unitPrice,
+      unitCost: line.product.costPrice,
+      quantity: line.qty,
+      applyTax: line.applyTax,
+      taxRate: line.product.taxRate,
+    }),
+  )
+  const totals = calculateSaleTotals(calculatedLines)
+  const { subtotal, tax: taxTotal, total, grossProfit: projectedProfit } = totals
   const itemCount = detailed.reduce((sum, line) => sum + line.qty, 0)
 
   useEffect(() => {
@@ -56,25 +77,32 @@ export function SellView() {
   function addToCart(productId: string) {
     const product = products.find((p) => p.id === productId)
     if (!product) return
-    const isLabor = product.sku.startsWith('SVC-')
-    if (!isLabor && product.stock <= 0) return
+    if (!product.isLabor && product.stock <= 0) return
     setCart((prev) => {
       const existing = prev.find((l) => l.productId === productId)
       if (existing) {
-        if (!isLabor && existing.qty >= product.stock) return prev
+        if (!product.isLabor && existing.qty >= product.stock) return prev
         return prev.map((l) =>
           l.productId === productId ? { ...l, qty: l.qty + 1 } : l,
         )
       }
-      return [...prev, { productId, qty: 1 }]
+      return [
+        ...prev,
+        {
+          productId,
+          qty: 1,
+          applyTax: product.taxable,
+          unitPrice: product.price,
+          overrideReason: '',
+        },
+      ]
     })
   }
 
   function setQty(productId: string, qty: number) {
     const product = products.find((p) => p.id === productId)
     if (!product) return
-    const isLabor = product.sku.startsWith('SVC-')
-    const max = isLabor ? 99 : product.stock
+    const max = product.isLabor ? 99 : product.stock
     const next = Math.max(0, Math.min(qty, max))
     setCart((prev) => {
       if (next === 0) return prev.filter((l) => l.productId !== productId)
@@ -82,16 +110,61 @@ export function SellView() {
     })
   }
 
+  function updateCartLine(productId: string, patch: Partial<CartLine>) {
+    setCart((prev) =>
+      prev.map((line) => (line.productId === productId ? { ...line, ...patch } : line)),
+    )
+  }
+
+  function chooseCustomer(name: string) {
+    setCustomerName(name)
+    const match = customers.find((customer) => customer.name.toLowerCase() === name.trim().toLowerCase())
+    setCustomerId(match?.id ?? null)
+    if (match) {
+      setCustomerPhone(match.phone)
+      setVehicleInfo(match.vehicleInfo)
+    }
+  }
+
   async function takePayment() {
     if (detailed.length === 0 || paying) return
+    if (method === 'credit') {
+      if (!customerName.trim() || (!customerPhone.trim() && !vehicleInfo.trim())) {
+        setFlash('Credit requires a customer name and phone or vehicle.')
+        return
+      }
+      if (!isOnline()) {
+        setFlash('Connect to the internet before saving a credit sale.')
+        return
+      }
+      const paid = Number(amountPaid)
+      if (Number.isNaN(paid) || paid < 0 || paid > total) {
+        setFlash('Enter a valid amount paid, no more than the total.')
+        return
+      }
+    }
     setPaying(true)
-    const sale = await checkout(cart, method, { customerName, vehicleInfo })
+    const sale = await checkout(cart, method, {
+      customerId,
+      customerName,
+      customerPhone,
+      vehicleInfo,
+      dueDate: dueDate || null,
+      notes,
+      amountPaid: method === 'credit' ? Number(amountPaid) : total,
+      initialPaymentMethod: initialMethod,
+    })
     setPaying(false)
     if (!sale) return
 
     setCart([])
+    setCustomerId(null)
     setCustomerName('')
+    setCustomerPhone('')
     setVehicleInfo('')
+    setDueDate('')
+    setNotes('')
+    setAmountPaid('0')
     setReceipt(sale)
 
     if (!isOnline()) {
@@ -131,7 +204,7 @@ export function SellView() {
           <div className="product-grid">
             {filtered.map((product) => {
               const inCart = cart.find((l) => l.productId === product.id)?.qty ?? 0
-              const isLabor = product.sku.startsWith('SVC-')
+              const isLabor = product.isLabor
               const out = !isLabor && product.stock <= 0
               const low = !isLabor && product.stock <= product.lowStockAt
               return (
@@ -167,10 +240,18 @@ export function SellView() {
             <label>
               Customer
               <input
+                list="customer-list"
                 value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
+                onChange={(e) => chooseCustomer(e.target.value)}
                 placeholder="Name (optional)"
               />
+              <datalist id="customer-list">
+                {customers.map((customer) => (
+                  <option key={customer.id} value={customer.name}>
+                    {customer.phone || customer.vehicleInfo}
+                  </option>
+                ))}
+              </datalist>
             </label>
             <label>
               Vehicle
@@ -180,6 +261,15 @@ export function SellView() {
                 placeholder="Year / make / plate (optional)"
               />
             </label>
+            <label>
+              Phone
+              <input
+                inputMode="tel"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                placeholder="Required for credit if no vehicle"
+              />
+            </label>
           </div>
 
           <ul className="cart-lines">
@@ -187,7 +277,46 @@ export function SellView() {
               <li key={line.productId}>
                 <div className="line-main">
                   <strong>{line.product.name}</strong>
-                  <span>{money(line.product.price * line.qty)}</span>
+                  <span>
+                    {money(
+                      calculateLine({
+                        unitPrice: line.unitPrice,
+                        unitCost: line.product.costPrice,
+                        quantity: line.qty,
+                        applyTax: line.applyTax,
+                        taxRate: line.product.taxRate,
+                      }).total,
+                    )}
+                  </span>
+                </div>
+                <div className="line-pricing">
+                  {isOwner ? (
+                    <label>
+                      Unit price
+                      <input
+                        inputMode="decimal"
+                        value={line.unitPrice}
+                        onChange={(event) =>
+                          updateCartLine(line.productId, {
+                            unitPrice: Math.max(0, Number(event.target.value) || 0),
+                          })
+                        }
+                        aria-label={`Unit price for ${line.product.name}`}
+                      />
+                    </label>
+                  ) : (
+                    <span>{money(line.unitPrice)} each</span>
+                  )}
+                  <label className="tax-toggle">
+                    <input
+                      type="checkbox"
+                      checked={line.applyTax}
+                      onChange={(event) =>
+                        updateCartLine(line.productId, { applyTax: event.target.checked })
+                      }
+                    />
+                    Tax {Math.round(line.product.taxRate * 100)}%
+                  </label>
                 </div>
                 <div className="line-controls">
                   <button
@@ -205,7 +334,7 @@ export function SellView() {
                     aria-label="Increase"
                     onClick={() => setQty(line.productId, line.qty + 1)}
                     disabled={
-                      !line.product.sku.startsWith('SVC-') && line.qty >= line.product.stock
+                      !line.product.isLabor && line.qty >= line.product.stock
                     }
                   >
                     <Plus size={16} />
@@ -240,9 +369,71 @@ export function SellView() {
             ))}
           </div>
 
-          <div className="cart-total">
-            <span>Total</span>
-            <strong>{money(total)}</strong>
+          {method === 'credit' && (
+            <div className="credit-fields">
+              <div className="credit-callout">
+                <WalletCards size={18} aria-hidden />
+                <span>Save the balance to this customer and collect it later.</span>
+              </div>
+              <div className="form-row">
+                <label>
+                  Paid now
+                  <input
+                    inputMode="decimal"
+                    value={amountPaid}
+                    onChange={(event) => setAmountPaid(event.target.value)}
+                    placeholder="0.00"
+                  />
+                </label>
+                <label>
+                  Paid by
+                  <select
+                    value={initialMethod}
+                    disabled={Number(amountPaid) <= 0}
+                    onChange={(event) =>
+                      setInitialMethod(event.target.value as 'cash' | 'card' | 'transfer')
+                    }
+                  >
+                    <option value="cash">Cash</option>
+                    <option value="card">Card</option>
+                    <option value="transfer">Transfer</option>
+                  </select>
+                </label>
+              </div>
+              <div className="form-row">
+                <label>
+                  Due date
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(event) => setDueDate(event.target.value)}
+                  />
+                </label>
+                <label>
+                  Credit note
+                  <input
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                    placeholder="Agreement or reminder"
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+
+          <div className="cart-totals">
+            <div><span>Subtotal</span><strong>{money(subtotal)}</strong></div>
+            <div><span>Tax</span><strong>{money(taxTotal)}</strong></div>
+            {isOwner && (
+              <div className="profit-row"><span>Projected gross profit</span><strong>{money(projectedProfit)}</strong></div>
+            )}
+            <div className="grand-total"><span>Total</span><strong>{money(total)}</strong></div>
+            {method === 'credit' && (
+              <div className="balance-row">
+                <span>Balance due</span>
+                <strong>{money(Math.max(0, total - (Number(amountPaid) || 0)))}</strong>
+              </div>
+            )}
           </div>
 
           <button
@@ -251,7 +442,7 @@ export function SellView() {
             disabled={detailed.length === 0 || paying}
             onClick={takePayment}
           >
-            {paying ? 'Processing…' : 'Take payment'}
+            {paying ? 'Processing…' : method === 'credit' ? 'Save credit sale' : 'Take payment'}
           </button>
 
           {flash && (

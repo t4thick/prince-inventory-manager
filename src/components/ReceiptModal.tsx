@@ -6,6 +6,7 @@ const methodLabel = {
   cash: 'Cash',
   card: 'Card',
   transfer: 'Transfer',
+  credit: 'Credit / Pay later',
 } as const
 
 type Props = {
@@ -37,6 +38,7 @@ export function ReceiptModal({ sale, onClose }: Props) {
           <header className="receipt-header">
             <strong className="receipt-shop">Prince Auto</strong>
             <span className="receipt-meta">{formatDateTime(sale.createdAt)}</span>
+            <span className="receipt-meta">{sale.receiptNumber}</span>
           </header>
 
           {(sale.customerName || sale.vehicleInfo) && (
@@ -54,15 +56,26 @@ export function ReceiptModal({ sale, onClose }: Props) {
                 <span>
                   {item.qty}× {item.name}
                 </span>
-                <span>{money(item.price * item.qty)}</span>
+                <span>{money(item.lineTotal)}</span>
               </li>
             ))}
           </ul>
 
+          <div className="receipt-breakdown">
+            <p><span>Subtotal</span><span>{money(sale.subtotal)}</span></p>
+            <p><span>Tax</span><span>{money(sale.taxTotal)}</span></p>
+          </div>
           <div className="receipt-total">
             <span>Total · {methodLabel[sale.paymentMethod]}</span>
             <strong>{money(sale.total)}</strong>
           </div>
+          {sale.paymentMethod === 'credit' && (
+            <div className="receipt-breakdown">
+              <p><span>Paid</span><span>{money(sale.amountPaid)}</span></p>
+              <p className="receipt-balance"><span>Balance due</span><strong>{money(sale.balanceDue)}</strong></p>
+              {sale.dueDate && <p><span>Due date</span><span>{sale.dueDate}</span></p>}
+            </div>
+          )}
 
           <p className="receipt-thanks">Thank you for choosing Prince Auto.</p>
         </div>

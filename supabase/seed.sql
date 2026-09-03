@@ -1,0 +1,2 @@
+-- Development seed data is created by the owner account on first app load.
+-- Keep this file present so `supabase db reset` can run without a missing-file error.

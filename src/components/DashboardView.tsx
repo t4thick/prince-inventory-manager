@@ -8,6 +8,7 @@ import {
   Package,
   Smartphone,
   TrendingUp,
+  WalletCards,
   Wrench,
 } from 'lucide-react'
 import { formatDateTime, money, todayKey } from '../lib/format'
@@ -22,18 +23,20 @@ function dayLabel(offset: number): string {
 }
 
 type Props = {
-  onNavigate: (tab: 'sell' | 'stock' | 'sales') => void
+  onNavigate: (tab: 'sell' | 'stock' | 'sales' | 'credit') => void
 }
 
 export function DashboardView({ onNavigate }: Props) {
-  const { products, sales, offlinePending } = useShop()
+  const { products, sales, offlinePending, isOwner } = useShop()
 
   const data = useMemo(() => {
     const today = todayKey()
     const active = sales.filter((s) => !s.voidedAt)
-    const todays = active.filter((s) => s.createdAt.startsWith(today))
+    const todays = active.filter((s) => todayKey(new Date(s.createdAt)) === today)
 
     const revenueToday = todays.reduce((sum, s) => sum + s.total, 0)
+    const taxToday = todays.reduce((sum, s) => sum + s.taxTotal, 0)
+    const profitToday = todays.reduce((sum, s) => sum + s.grossProfit, 0)
     const itemsToday = todays.reduce((sum, s) => sum + s.items.reduce((n, i) => n + i.qty, 0), 0)
 
     // 7-day revenue series (oldest first)
@@ -41,7 +44,7 @@ export function DashboardView({ onNavigate }: Props) {
       const offset = 6 - i
       const key = todayKey(new Date(Date.now() - offset * DAY_MS))
       const total = active
-        .filter((s) => s.createdAt.startsWith(key))
+        .filter((s) => todayKey(new Date(s.createdAt)) === key)
         .reduce((sum, s) => sum + s.total, 0)
       return { label: offset === 0 ? 'Today' : dayLabel(offset), total }
     })
@@ -49,15 +52,16 @@ export function DashboardView({ onNavigate }: Props) {
     const weekRevenue = series.reduce((sum, p) => sum + p.total, 0)
 
     // Payment split today
-    const byMethod = { cash: 0, card: 0, transfer: 0 }
-    for (const s of todays) byMethod[s.paymentMethod] += s.total
-    const methodMax = Math.max(byMethod.cash, byMethod.card, byMethod.transfer, 1)
+    const byMethod = { cash: 0, card: 0, transfer: 0, credit: 0 }
+    for (const s of todays) byMethod[s.paymentMethod] += s.amountPaid
+    const methodMax = Math.max(byMethod.cash, byMethod.card, byMethod.transfer, byMethod.credit, 1)
+    const outstanding = active.reduce((sum, sale) => sum + sale.balanceDue, 0)
 
     // Inventory summary (parts only, labor excluded)
-    const parts = products.filter((p) => !p.sku.startsWith('SVC-'))
+    const parts = products.filter((p) => !p.isLabor)
     const laborCount = products.length - parts.length
     const unitsOnHand = parts.reduce((sum, p) => sum + p.stock, 0)
-    const stockValue = parts.reduce((sum, p) => sum + p.stock * p.price, 0)
+    const stockValue = parts.reduce((sum, p) => sum + p.stock * p.costPrice, 0)
     const lowParts = parts
       .filter((p) => p.stock <= p.lowStockAt)
       .sort((a, b) => a.stock - b.stock)
@@ -81,6 +85,9 @@ export function DashboardView({ onNavigate }: Props) {
 
     return {
       revenueToday,
+      taxToday,
+      profitToday,
+      outstanding,
       jobsToday: todays.length,
       itemsToday,
       series,
@@ -116,6 +123,39 @@ export function DashboardView({ onNavigate }: Props) {
           <div className="kpi-body">
             <span className="kpi-label">Revenue today</span>
             <strong className="kpi-value">{money(data.revenueToday)}</strong>
+          </div>
+        </button>
+        {isOwner && (
+          <button type="button" className="kpi-card" onClick={() => onNavigate('sales')}>
+            <span className="kpi-icon is-green">
+              <TrendingUp size={20} aria-hidden />
+            </span>
+            <div className="kpi-body">
+              <span className="kpi-label">Gross profit today</span>
+              <strong className="kpi-value">{money(data.profitToday)}</strong>
+            </div>
+          </button>
+        )}
+        <button type="button" className="kpi-card" onClick={() => onNavigate('sales')}>
+          <span className="kpi-icon is-blue">
+            <Banknote size={20} aria-hidden />
+          </span>
+          <div className="kpi-body">
+            <span className="kpi-label">Tax today</span>
+            <strong className="kpi-value">{money(data.taxToday)}</strong>
+          </div>
+        </button>
+        <button
+          type="button"
+          className={`kpi-card ${data.outstanding > 0 ? 'kpi-alert' : ''}`}
+          onClick={() => onNavigate('credit')}
+        >
+          <span className="kpi-icon is-orange">
+            <WalletCards size={20} aria-hidden />
+          </span>
+          <div className="kpi-body">
+            <span className="kpi-label">Customer balances</span>
+            <strong className="kpi-value">{money(data.outstanding)}</strong>
           </div>
         </button>
         <button type="button" className="kpi-card" onClick={() => onNavigate('sales')}>
@@ -223,6 +263,18 @@ export function DashboardView({ onNavigate }: Props) {
               </div>
               <span className="method-amt">{money(data.byMethod.transfer)}</span>
             </li>
+            <li>
+              <span className="method-label">
+                <WalletCards size={15} aria-hidden /> Credit paid
+              </span>
+              <div className="method-track">
+                <div
+                  className="method-fill is-orange"
+                  style={{ width: `${(data.byMethod.credit / data.methodMax) * 100}%` }}
+                />
+              </div>
+              <span className="method-amt">{money(data.byMethod.credit)}</span>
+            </li>
           </ul>
         </section>
 
@@ -236,10 +288,12 @@ export function DashboardView({ onNavigate }: Props) {
             </button>
           </div>
           <div className="inv-summary">
-            <div className="inv-stat">
-              <span>Stock value</span>
-              <strong>{money(data.stockValue)}</strong>
-            </div>
+            {isOwner && (
+              <div className="inv-stat">
+                <span>Inventory cost value</span>
+                <strong>{money(data.stockValue)}</strong>
+              </div>
+            )}
             <div className="inv-stat">
               <span>Units on hand</span>
               <strong>{data.unitsOnHand}</strong>

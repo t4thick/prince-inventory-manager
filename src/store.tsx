@@ -1,25 +1,40 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useAuth } from './auth'
 import { uid } from './lib/format'
+import { calculateLine, calculateSaleTotals } from './lib/finance'
 import { drainOfflineQueue, enqueueOfflineSale, isOnline, pendingOfflineCount } from './lib/offline'
 import { supabase } from './lib/supabase'
-import type { CartLine, CheckoutDetails, PaymentMethod, Product, Sale } from './types'
+import type {
+  CartLine,
+  CheckoutDetails,
+  CollectedPaymentMethod,
+  Customer,
+  Payment,
+  PaymentMethod,
+  PaymentStatus,
+  Product,
+  Sale,
+} from './types'
 
 const seedProducts: Product[] = [
-  { id: 'p_oil', name: 'Engine Oil 5W-30 (qt)', price: 8.99, stock: 32, lowStockAt: 8, sku: 'OIL-5W30', createdAt: '', updatedAt: '' },
-  { id: 'p_filter_oil', name: 'Oil Filter', price: 12.5, stock: 18, lowStockAt: 4, sku: 'FILT-OIL', createdAt: '', updatedAt: '' },
-  { id: 'p_brake', name: 'Brake Pads (set)', price: 45, stock: 8, lowStockAt: 2, sku: 'BRK-PAD', createdAt: '', updatedAt: '' },
-  { id: 'p_spark', name: 'Spark Plug', price: 6, stock: 24, lowStockAt: 6, sku: 'SPK-PLG', createdAt: '', updatedAt: '' },
-  { id: 'p_air', name: 'Air Filter', price: 18, stock: 5, lowStockAt: 3, sku: 'FILT-AIR', createdAt: '', updatedAt: '' },
-  { id: 'p_coolant', name: 'Coolant 1 gal', price: 22, stock: 10, lowStockAt: 3, sku: 'CLNT-1G', createdAt: '', updatedAt: '' },
-  { id: 'p_svc_oil', name: 'Labor — Oil Change', price: 49.99, stock: 999, lowStockAt: 0, sku: 'SVC-OIL', createdAt: '', updatedAt: '' },
-  { id: 'p_svc_brake', name: 'Labor — Brake Service', price: 120, stock: 999, lowStockAt: 0, sku: 'SVC-BRK', createdAt: '', updatedAt: '' },
+  { id: 'p_oil', name: 'Engine Oil 5W-30 (qt)', price: 8.99, costPrice: 5.5, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', stock: 32, lowStockAt: 8, sku: 'OIL-5W30', createdAt: '', updatedAt: '' },
+  { id: 'p_filter_oil', name: 'Oil Filter', price: 12.5, costPrice: 7, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', stock: 18, lowStockAt: 4, sku: 'FILT-OIL', createdAt: '', updatedAt: '' },
+  { id: 'p_brake', name: 'Brake Pads (set)', price: 45, costPrice: 26, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', stock: 8, lowStockAt: 2, sku: 'BRK-PAD', createdAt: '', updatedAt: '' },
+  { id: 'p_spark', name: 'Spark Plug', price: 6, costPrice: 3.25, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', stock: 24, lowStockAt: 6, sku: 'SPK-PLG', createdAt: '', updatedAt: '' },
+  { id: 'p_air', name: 'Air Filter', price: 18, costPrice: 10, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', stock: 5, lowStockAt: 3, sku: 'FILT-AIR', createdAt: '', updatedAt: '' },
+  { id: 'p_coolant', name: 'Coolant 1 gal', price: 22, costPrice: 13, taxable: true, taxRate: 0.2, isLabor: false, barcode: '', stock: 10, lowStockAt: 3, sku: 'CLNT-1G', createdAt: '', updatedAt: '' },
+  { id: 'p_svc_oil', name: 'Labor — Oil Change', price: 49.99, costPrice: 0, taxable: false, taxRate: 0.2, isLabor: true, barcode: '', stock: 999, lowStockAt: 0, sku: 'SVC-OIL', createdAt: '', updatedAt: '' },
+  { id: 'p_svc_brake', name: 'Labor — Brake Service', price: 120, costPrice: 0, taxable: false, taxRate: 0.2, isLabor: true, barcode: '', stock: 999, lowStockAt: 0, sku: 'SVC-BRK', createdAt: '', updatedAt: '' },
 ]
 
 type ProductRow = {
   id: string
   name: string
   price: number | string
+  taxable?: boolean
+  tax_rate?: number | string
+  is_labor?: boolean
+  barcode?: string | null
   stock: number
   low_stock_at: number
   sku: string
@@ -29,23 +44,68 @@ type ProductRow = {
 
 type SaleRow = {
   id: string
+  receipt_number?: string
   items: Sale['items']
+  subtotal?: number | string
+  tax_total?: number | string
   total: number | string
   payment_method: PaymentMethod
+  amount_paid?: number | string
+  balance_due?: number | string
+  payment_status?: PaymentStatus
   created_at: string
   worker_id: string | null
   worker_name: string
+  customer_id?: string | null
   customer_name: string
+  customer_phone?: string
   vehicle_info: string
+  due_date?: string | null
+  notes?: string
   voided_at: string | null
   voided_by: string | null
 }
 
-function productFromRow(row: ProductRow): Product {
+type ProductCostRow = { product_id: string; cost_price: number | string }
+type SaleFinancialRow = { sale_id: string; cost_total: number | string; gross_profit: number | string }
+type SaleItemFinancialRow = {
+  sale_id: string
+  product_id: string | null
+  line_cost: number | string
+  gross_profit: number | string
+}
+type CustomerRow = {
+  id: string
+  name: string
+  phone: string
+  email: string
+  vehicle_info: string
+  notes: string
+  created_at: string
+  updated_at: string
+}
+type PaymentRow = {
+  id: string
+  sale_id: string
+  customer_id: string | null
+  amount: number | string
+  payment_method: CollectedPaymentMethod
+  notes: string
+  recorded_by: string
+  created_at: string
+  reversed_at: string | null
+}
+
+function productFromRow(row: ProductRow, costPrice = 0): Product {
   return {
     id: row.id,
     name: row.name,
     price: Number(row.price),
+    costPrice,
+    taxable: row.taxable ?? false,
+    taxRate: Number(row.tax_rate ?? 0.2),
+    isLabor: row.is_labor ?? row.sku.startsWith('SVC-'),
+    barcode: row.barcode ?? '',
     stock: row.stock,
     lowStockAt: row.low_stock_at,
     sku: row.sku,
@@ -59,6 +119,10 @@ function productToRow(product: Product): ProductRow {
     id: product.id,
     name: product.name,
     price: product.price,
+    taxable: product.taxable,
+    tax_rate: product.taxRate,
+    is_labor: product.isLabor,
+    barcode: product.barcode || null,
     stock: product.stock,
     low_stock_at: product.lowStockAt,
     sku: product.sku,
@@ -67,19 +131,79 @@ function productToRow(product: Product): ProductRow {
   }
 }
 
-function saleFromRow(row: SaleRow): Sale {
+function saleFromRow(
+  row: SaleRow,
+  financial?: SaleFinancialRow,
+  lineFinancials?: Map<string, SaleItemFinancialRow>,
+): Sale {
+  const total = Number(row.total)
+  const subtotal = Number(row.subtotal ?? total)
+  const amountPaid = Number(row.amount_paid ?? total)
+  const voided = Boolean(row.voided_at)
   return {
     id: row.id,
-    items: row.items,
-    total: Number(row.total),
+    receiptNumber: row.receipt_number ?? row.id,
+    items: row.items.map((item) => {
+      const lineFinancial = lineFinancials?.get(`${row.id}:${item.productId}`)
+      return {
+        ...item,
+        sku: item.sku ?? '',
+        taxable: item.taxable ?? false,
+        taxRate: Number(item.taxRate ?? 0),
+        taxAmount: Number(item.taxAmount ?? 0),
+        lineSubtotal: Number(item.lineSubtotal ?? item.price * item.qty),
+        lineTotal: Number(item.lineTotal ?? item.price * item.qty),
+        lineCost: Number(lineFinancial?.line_cost ?? 0),
+        grossProfit: Number(lineFinancial?.gross_profit ?? 0),
+      }
+    }),
+    subtotal,
+    taxTotal: Number(row.tax_total ?? 0),
+    total,
     paymentMethod: row.payment_method,
+    amountPaid,
+    balanceDue: Number(row.balance_due ?? Math.max(0, total - amountPaid)),
+    paymentStatus: voided ? 'voided' : (row.payment_status ?? 'paid'),
     createdAt: row.created_at,
     workerId: row.worker_id,
     workerName: row.worker_name ?? '',
+    customerId: row.customer_id ?? null,
     customerName: row.customer_name ?? '',
+    customerPhone: row.customer_phone ?? '',
     vehicleInfo: row.vehicle_info ?? '',
+    dueDate: row.due_date ?? null,
+    notes: row.notes ?? '',
+    costTotal: Number(financial?.cost_total ?? 0),
+    grossProfit: Number(financial?.gross_profit ?? 0),
     voidedAt: row.voided_at,
     voidedBy: row.voided_by,
+  }
+}
+
+function customerFromRow(row: CustomerRow): Customer {
+  return {
+    id: row.id,
+    name: row.name,
+    phone: row.phone,
+    email: row.email,
+    vehicleInfo: row.vehicle_info,
+    notes: row.notes,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function paymentFromRow(row: PaymentRow): Payment {
+  return {
+    id: row.id,
+    saleId: row.sale_id,
+    customerId: row.customer_id,
+    amount: Number(row.amount),
+    paymentMethod: row.payment_method,
+    notes: row.notes,
+    recordedBy: row.recorded_by,
+    createdAt: row.created_at,
+    reversedAt: row.reversed_at,
   }
 }
 
@@ -96,25 +220,70 @@ function buildSale(
     .map((line) => {
       const product = products.find((p) => p.id === line.productId)
       if (!product || line.qty <= 0) return null
-      const isLabor = product.sku.startsWith('SVC-')
-      const qty = isLabor ? line.qty : Math.min(line.qty, product.stock)
+      const qty = product.isLabor ? line.qty : Math.min(line.qty, product.stock)
       if (qty <= 0) return null
-      return { productId: product.id, name: product.name, price: product.price, qty }
+      const price = Math.max(0, line.unitPrice)
+      const taxRate = line.applyTax ? product.taxRate : 0
+      const financial = calculateLine({
+        unitPrice: price,
+        unitCost: product.costPrice,
+        quantity: qty,
+        applyTax: line.applyTax,
+        taxRate,
+      })
+      return {
+        productId: product.id,
+        name: product.name,
+        sku: product.sku,
+        price,
+        qty,
+        taxable: line.applyTax,
+        taxRate,
+        taxAmount: financial.tax,
+        lineSubtotal: financial.subtotal,
+        lineTotal: financial.total,
+        lineCost: financial.cost,
+        grossProfit: financial.grossProfit,
+      }
     })
     .filter((x): x is NonNullable<typeof x> => Boolean(x))
 
   if (lines.length === 0) return null
 
+  const totals = calculateSaleTotals(
+    lines.map((line) => ({
+      subtotal: line.lineSubtotal,
+      tax: line.taxAmount,
+      total: line.lineTotal,
+      cost: line.lineCost,
+      grossProfit: line.grossProfit,
+    })),
+  )
+  const { subtotal, tax: taxTotal, total } = totals
+  const amountPaid = paymentMethod === 'credit' ? Math.min(details.amountPaid, total) : total
+
   return {
     id: uid('sale'),
+    receiptNumber: '',
     items: lines,
-    total: lines.reduce((sum, line) => sum + line.price * line.qty, 0),
+    subtotal,
+    taxTotal,
+    total,
     paymentMethod,
+    amountPaid,
+    balanceDue: total - amountPaid,
+    paymentStatus: total - amountPaid === 0 ? 'paid' : amountPaid > 0 ? 'partial' : 'unpaid',
     createdAt: now,
     workerId,
     workerName,
+    customerId: details.customerId,
     customerName: details.customerName.trim(),
+    customerPhone: details.customerPhone.trim(),
     vehicleInfo: details.vehicleInfo.trim(),
+    dueDate: details.dueDate,
+    notes: details.notes.trim(),
+    costTotal: totals.cost,
+    grossProfit: totals.grossProfit,
     voidedAt: null,
     voidedBy: null,
   }
@@ -123,15 +292,18 @@ function buildSale(
 type ShopContextValue = {
   products: Product[]
   sales: Sale[]
+  customers: Customer[]
+  payments: Payment[]
   loading: boolean
   error: string | null
   offlinePending: number
   isOwner: boolean
   addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => void
   updateProduct: (id: string, patch: Partial<Omit<Product, 'id' | 'createdAt'>>) => void
-  adjustStock: (id: string, delta: number) => void
+  adjustStock: (id: string, delta: number, reason?: string) => void
   deleteProduct: (id: string) => void
   checkout: (items: CartLine[], paymentMethod: PaymentMethod, details: CheckoutDetails) => Promise<Sale | null>
+  recordPayment: (saleId: string, amount: number, method: CollectedPaymentMethod, notes?: string) => Promise<boolean>
   voidSale: (saleId: string) => Promise<boolean>
   clearError: () => void
 }
@@ -142,6 +314,8 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const { session, profile, isOwner } = useAuth()
   const [products, setProducts] = useState<Product[]>([])
   const [sales, setSales] = useState<Sale[]>([])
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [offlinePending, setOfflinePending] = useState(0)
@@ -149,9 +323,24 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     if (!supabase || !session) return
 
-    const [productRes, saleRes] = await Promise.all([
+    const [
+      productRes,
+      saleRes,
+      customerRes,
+      paymentRes,
+      costRes,
+      financialRes,
+      lineFinancialRes,
+    ] = await Promise.all([
       supabase.from('products').select('*').order('name'),
       supabase.from('sales').select('*').order('created_at', { ascending: false }),
+      supabase.from('customers').select('*').order('name'),
+      supabase.from('payments').select('*').order('created_at', { ascending: false }),
+      isOwner ? supabase.from('product_costs').select('*') : Promise.resolve({ data: [], error: null }),
+      isOwner ? supabase.from('sale_financials').select('*') : Promise.resolve({ data: [], error: null }),
+      isOwner
+        ? supabase.from('sale_items').select('sale_id,product_id,line_cost,gross_profit')
+        : Promise.resolve({ data: [], error: null }),
     ])
 
     if (productRes.error) {
@@ -164,8 +353,31 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       setLoading(false)
       return
     }
+    if (
+      customerRes.error ||
+      paymentRes.error ||
+      costRes.error ||
+      financialRes.error ||
+      lineFinancialRes.error
+    ) {
+      setError(
+        customerRes.error?.message ??
+          paymentRes.error?.message ??
+          costRes.error?.message ??
+          financialRes.error?.message ??
+          lineFinancialRes.error?.message ??
+          'Unable to load financial data.',
+      )
+      setLoading(false)
+      return
+    }
 
-    let nextProducts = (productRes.data as ProductRow[]).map(productFromRow)
+    const costs = new Map(
+      ((costRes.data ?? []) as ProductCostRow[]).map((row) => [row.product_id, Number(row.cost_price)]),
+    )
+    let nextProducts = (productRes.data as ProductRow[]).map((row) =>
+      productFromRow(row, costs.get(row.id) ?? 0),
+    )
     if (nextProducts.length === 0 && isOwner) {
       const now = new Date().toISOString()
       const seeded = seedProducts.map((p) => ({ ...p, createdAt: now, updatedAt: now }))
@@ -173,32 +385,69 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         onConflict: 'id',
         ignoreDuplicates: true,
       })
+      await supabase.from('product_costs').upsert(
+        seeded.map((product) => ({
+          product_id: product.id,
+          cost_price: product.costPrice,
+        })),
+        { onConflict: 'product_id', ignoreDuplicates: true },
+      )
       const again = await supabase.from('products').select('*').order('name')
       if (!again.error && again.data) {
-        nextProducts = (again.data as ProductRow[]).map(productFromRow)
+        nextProducts = (again.data as ProductRow[]).map((row) =>
+          productFromRow(row, costs.get(row.id) ?? 0),
+        )
       }
     }
 
+    const financials = new Map(
+      ((financialRes.data ?? []) as SaleFinancialRow[]).map((row) => [row.sale_id, row]),
+    )
+    const lineFinancials = new Map(
+      ((lineFinancialRes.data ?? []) as SaleItemFinancialRow[]).map((row) => [
+        `${row.sale_id}:${row.product_id}`,
+        row,
+      ]),
+    )
     setProducts(nextProducts)
-    setSales((saleRes.data as SaleRow[]).map(saleFromRow))
+    setSales(
+      (saleRes.data as SaleRow[]).map((row) =>
+        saleFromRow(row, financials.get(row.id), lineFinancials),
+      ),
+    )
+    setCustomers((customerRes.data as CustomerRow[]).map(customerFromRow))
+    setPayments((paymentRes.data as PaymentRow[]).map(paymentFromRow))
     setError(null)
     setLoading(false)
   }, [session, isOwner])
 
   const submitSale = useCallback(
-    async (sale: Sale) => {
+    async (sale: Sale, originalItems: CartLine[], details: CheckoutDetails) => {
       if (!supabase || !session?.user) return false
 
       const payload = {
         p_id: sale.id,
-        p_items: sale.items,
-        p_total: sale.total,
+        p_items: sale.items.map((item) => {
+          const cartLine = originalItems.find((candidate) => candidate.productId === item.productId)
+          return {
+            productId: item.productId,
+            qty: item.qty,
+            applyTax: item.taxable,
+            unitPrice: isOwner ? item.price : null,
+            overrideReason: cartLine?.overrideReason ?? '',
+          }
+        }),
         p_payment_method: sale.paymentMethod,
-        p_created_at: sale.createdAt,
-        p_worker_id: session.user.id,
+        p_amount_paid: sale.amountPaid,
+        p_initial_payment_method: details.initialPaymentMethod,
+        p_customer_id: sale.customerId,
         p_worker_name: sale.workerName,
         p_customer_name: sale.customerName,
+        p_customer_phone: sale.customerPhone,
         p_vehicle_info: sale.vehicleInfo,
+        p_due_date: sale.dueDate,
+        p_notes: sale.notes,
+        p_device_created_at: sale.createdAt,
       }
 
       if (!isOnline()) {
@@ -207,21 +456,23 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         return true
       }
 
-      const { error: err } = await supabase.rpc('record_sale', payload)
+      const { data, error: err } = await supabase.rpc('record_sale_v2', payload)
       if (err) {
         setError(err.message)
         return false
       }
+      const result = data as { receiptNumber?: string } | null
+      if (result?.receiptNumber) sale.receiptNumber = result.receiptNumber
       return true
     },
-    [session],
+    [session, isOwner],
   )
 
   const syncOffline = useCallback(async () => {
     const client = supabase
     if (!client || !session || !isOnline()) return
     const { synced, remaining } = await drainOfflineQueue(async (payload) => {
-      const { error: err } = await client.rpc('record_sale', payload)
+      const { error: err } = await client.rpc('record_sale_v2', payload)
       return !err
     })
     setOfflinePending(remaining)
@@ -232,6 +483,8 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     if (!session) {
       setProducts([])
       setSales([])
+      setCustomers([])
+      setPayments([])
       setLoading(false)
       return
     }
@@ -265,6 +518,8 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     () => ({
       products,
       sales,
+      customers,
+      payments,
       loading,
       error,
       offlinePending,
@@ -278,9 +533,17 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         const now = new Date().toISOString()
         const product: Product = { ...input, id: uid('p'), createdAt: now, updatedAt: now }
         setProducts((prev) => [product, ...prev])
-        void supabase?.from('products').insert(productToRow(product)).then(({ error: err }) => {
+        void supabase?.from('products').insert(productToRow(product)).then(async ({ error: err }) => {
           if (err) {
             setError(err.message)
+            void refresh()
+            return
+          }
+          const { error: costError } = await supabase
+            ?.from('product_costs')
+            .upsert({ product_id: product.id, cost_price: product.costPrice }) ?? { error: null }
+          if (costError) {
+            setError(costError.message)
             void refresh()
           }
         })
@@ -295,18 +558,35 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         const row: Record<string, unknown> = { updated_at: now }
         if (patch.name !== undefined) row.name = patch.name
         if (patch.price !== undefined) row.price = patch.price
-        if (patch.stock !== undefined) row.stock = patch.stock
         if (patch.lowStockAt !== undefined) row.low_stock_at = patch.lowStockAt
         if (patch.sku !== undefined) row.sku = patch.sku
+        if (patch.taxable !== undefined) row.taxable = patch.taxable
+        if (patch.taxRate !== undefined) row.tax_rate = patch.taxRate
+        if (patch.isLabor !== undefined) row.is_labor = patch.isLabor
+        if (patch.barcode !== undefined) row.barcode = patch.barcode || null
         void supabase?.from('products').update(row).eq('id', id).then(({ error: err }) => {
           if (err) {
             setError(err.message)
             void refresh()
           }
         })
+        if (patch.costPrice !== undefined) {
+          void supabase?.from('product_costs')
+            .upsert({ product_id: id, cost_price: patch.costPrice })
+            .then(({ error: err }) => {
+              if (err) {
+                setError(err.message)
+                void refresh()
+              }
+            })
+        }
       },
-      adjustStock: (id, delta) => {
-        void supabase?.rpc('adjust_product_stock', { p_id: id, p_delta: delta }).then(({ error: err }) => {
+      adjustStock: (id, delta, reason = 'Manual adjustment') => {
+        void supabase?.rpc('adjust_product_stock', {
+          p_id: id,
+          p_delta: delta,
+          p_reason: reason,
+        }).then(({ error: err }) => {
           if (err) {
             setError(err.message)
           } else {
@@ -332,7 +612,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         const sale = buildSale(products, items, paymentMethod, session.user.id, profile.displayName, details)
         if (!sale) return null
 
-        const ok = await submitSale(sale)
+        const ok = await submitSale(sale, items, details)
         if (!ok) {
           await refresh()
           return null
@@ -340,6 +620,21 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
         if (isOnline()) await refresh()
         return sale
+      },
+      recordPayment: async (saleId, amount, method, notes = '') => {
+        if (!supabase) return false
+        const { error: err } = await supabase.rpc('record_customer_payment', {
+          p_sale_id: saleId,
+          p_amount: amount,
+          p_payment_method: method,
+          p_notes: notes,
+        })
+        if (err) {
+          setError(err.message)
+          return false
+        }
+        await refresh()
+        return true
       },
       voidSale: async (saleId) => {
         if (!supabase) return false
@@ -352,7 +647,20 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         return true
       },
     }),
-    [products, sales, loading, error, offlinePending, isOwner, session, profile, refresh, submitSale],
+    [
+      products,
+      sales,
+      customers,
+      payments,
+      loading,
+      error,
+      offlinePending,
+      isOwner,
+      session,
+      profile,
+      refresh,
+      submitSale,
+    ],
   )
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>

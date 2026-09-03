@@ -3,13 +3,17 @@ const QUEUE_KEY = 'prince-offline-sales'
 export type OfflineSalePayload = {
   p_id: string
   p_items: unknown
-  p_total: number
   p_payment_method: string
-  p_created_at: string
-  p_worker_id: string
+  p_amount_paid: number
+  p_initial_payment_method: string
+  p_customer_id: string | null
   p_worker_name: string
   p_customer_name: string
+  p_customer_phone: string
   p_vehicle_info: string
+  p_due_date: string | null
+  p_notes: string
+  p_device_created_at: string
 }
 
 export function isOnline(): boolean {

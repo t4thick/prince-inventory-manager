@@ -1,24 +1,27 @@
 import { useMemo, useState } from 'react'
-import { RotateCcw } from 'lucide-react'
+import { Printer, RotateCcw } from 'lucide-react'
 import { formatDateTime, money, todayKey } from '../lib/format'
 import { useAuth } from '../auth'
 import { useShop } from '../store'
 import type { Sale } from '../types'
+import { ReceiptModal } from './ReceiptModal'
 
 const methodLabel = {
   cash: 'Cash',
   card: 'Card',
   transfer: 'Transfer',
+  credit: 'Credit',
 } as const
 
 export function SalesView() {
   const { sales } = useShop()
+  const [receipt, setReceipt] = useState<Sale | null>(null)
 
   const grouped = useMemo(() => {
     const today = todayKey()
     const active = sales.filter((s) => !s.voidedAt)
-    const todays = active.filter((s) => s.createdAt.startsWith(today))
-    const earlier = active.filter((s) => !s.createdAt.startsWith(today))
+    const todays = active.filter((s) => todayKey(new Date(s.createdAt)) === today)
+    const earlier = active.filter((s) => todayKey(new Date(s.createdAt)) !== today)
     const voided = sales.filter((s) => s.voidedAt)
     return { todays, earlier, voided }
   }, [sales])
@@ -39,28 +42,37 @@ export function SalesView() {
       {grouped.todays.length > 0 && (
         <section className="sales-section">
           <h2>Today</h2>
-          <SaleList sales={grouped.todays} />
+          <SaleList sales={grouped.todays} onReceipt={setReceipt} />
         </section>
       )}
 
       {grouped.earlier.length > 0 && (
         <section className="sales-section">
           <h2>Earlier</h2>
-          <SaleList sales={grouped.earlier} />
+          <SaleList sales={grouped.earlier} onReceipt={setReceipt} />
         </section>
       )}
 
       {grouped.voided.length > 0 && (
         <section className="sales-section">
           <h2>Voided</h2>
-          <SaleList sales={grouped.voided} voided />
+          <SaleList sales={grouped.voided} voided onReceipt={setReceipt} />
         </section>
       )}
+      {receipt && <ReceiptModal sale={receipt} onClose={() => setReceipt(null)} />}
     </div>
   )
 }
 
-function SaleList({ sales, voided = false }: { sales: Sale[]; voided?: boolean }) {
+function SaleList({
+  sales,
+  voided = false,
+  onReceipt,
+}: {
+  sales: Sale[]
+  voided?: boolean
+  onReceipt: (sale: Sale) => void
+}) {
   const { voidSale, isOwner } = useShop()
   const { session } = useAuth()
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -86,6 +98,11 @@ function SaleList({ sales, voided = false }: { sales: Sale[]; voided?: boolean }
             <div>
               <strong>{money(sale.total)}</strong>
               {sale.voidedAt && <span className="void-badge">Voided</span>}
+              {!sale.voidedAt && sale.paymentStatus !== 'paid' && (
+                <span className={`status-badge ${sale.paymentStatus}`}>
+                  {sale.paymentStatus === 'partial' ? 'Partially paid' : 'Payment due'}
+                </span>
+              )}
             </div>
             <span className="sale-meta">
               {methodLabel[sale.paymentMethod]} · {formatDateTime(sale.createdAt)}
@@ -106,22 +123,40 @@ function SaleList({ sales, voided = false }: { sales: Sale[]; voided?: boolean }
             {sale.items.map((item) => (
               <li key={`${sale.id}-${item.productId}`}>
                 {item.qty}× {item.name}
-                <span>{money(item.price * item.qty)}</span>
+                <span>
+                  {money(item.lineTotal)}
+                  {isOwner && (
+                    <small className="line-profit">Profit {money(item.grossProfit)}</small>
+                  )}
+                </span>
               </li>
             ))}
           </ul>
 
-          {canVoid(sale) && (
-            <button
-              type="button"
-              className="ghost-btn danger void-btn"
-              disabled={busyId === sale.id}
-              onClick={() => onVoid(sale)}
-            >
-              <RotateCcw size={16} aria-hidden />
-              {busyId === sale.id ? 'Voiding…' : 'Void job'}
+          <div className="sale-summary">
+            <span>Subtotal {money(sale.subtotal)}</span>
+            <span>Tax {money(sale.taxTotal)}</span>
+            {sale.balanceDue > 0 && <strong>Balance {money(sale.balanceDue)}</strong>}
+            {isOwner && <strong>Profit {money(sale.grossProfit)}</strong>}
+          </div>
+
+          <div className="sale-actions">
+            <button type="button" className="ghost-btn" onClick={() => onReceipt(sale)}>
+              <Printer size={16} aria-hidden />
+              Receipt
             </button>
-          )}
+            {canVoid(sale) && (
+              <button
+                type="button"
+                className="ghost-btn danger void-btn"
+                disabled={busyId === sale.id}
+                onClick={() => onVoid(sale)}
+              >
+                <RotateCcw size={16} aria-hidden />
+                {busyId === sale.id ? 'Voiding…' : 'Void job'}
+              </button>
+            )}
+          </div>
         </li>
       ))}
     </ul>

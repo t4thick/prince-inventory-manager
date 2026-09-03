@@ -7,11 +7,13 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
+  WalletCards,
   WifiOff,
   Wrench,
 } from 'lucide-react'
 import { AuthProvider, useAuth } from './auth'
 import { DashboardView } from './components/DashboardView'
+import { CreditView } from './components/CreditView'
 import { LoginView } from './components/LoginView'
 import { ReportsView } from './components/ReportsView'
 import { SalesView } from './components/SalesView'
@@ -19,13 +21,14 @@ import { SellView } from './components/SellView'
 import { StockView } from './components/StockView'
 import { ShopProvider, useShop } from './store'
 
-type Tab = 'dashboard' | 'sell' | 'stock' | 'sales' | 'reports'
+type Tab = 'dashboard' | 'sell' | 'stock' | 'sales' | 'credit' | 'reports'
 
 const navItems: { id: Tab; label: string; icon: typeof Wrench }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'sell', label: 'Checkout', icon: Wrench },
   { id: 'stock', label: 'Parts', icon: Package },
   { id: 'sales', label: 'Jobs', icon: ClipboardList },
+  { id: 'credit', label: 'Balances', icon: WalletCards },
   { id: 'reports', label: 'Reports', icon: BarChart3 },
 ]
 
@@ -128,6 +131,7 @@ function Shell() {
               {tab === 'sell' && <SellView />}
               {tab === 'stock' && <StockView />}
               {tab === 'sales' && <SalesView />}
+              {tab === 'credit' && <CreditView />}
               {tab === 'reports' && <ReportsView />}
             </>
           )}

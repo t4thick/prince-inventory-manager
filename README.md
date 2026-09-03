@@ -13,10 +13,11 @@ Copy `.env.example` to `.env.local` and add your Supabase URL + publishable key.
 
 ## Database setup
 
-Run both SQL files in **Supabase → SQL Editor** (in order):
+Run the SQL files in **Supabase → SQL Editor** (in order):
 
 1. `supabase/migrations/20250824000000_initial_schema.sql`
 2. `supabase/migrations/20250826000000_phase1_auth.sql`
+3. `supabase/migrations/20260903000000_finance_credit.sql`
 
 Or after `npx supabase login` and `npx supabase link`:
 
@@ -45,6 +46,8 @@ https://prince-inventory-manager.vercel.app
 - **Auth** — owner vs worker roles, secure database rules
 - **PWA** — Add to Home Screen on iPhone/Android (standalone app feel)
 - **Offline** — sales queue locally when connection drops, sync when back
+- **Tax & profit** — optional 20% item tax, cost snapshots, per-sale and period profit
+- **Customer credit** — pay later, partial payments, searchable balances and payment history
 
 ## iPhone (PWA + optional Xcode wrapper)
 

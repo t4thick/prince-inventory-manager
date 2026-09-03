@@ -51,7 +51,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -64,7 +65,8 @@ button:disabled {
   cursor: not-allowed;
 }
 
-input {
+input,
+select {
   border: 1px solid var(--line);
   border-radius: 9px;
   padding: 0.6rem 0.75rem;
@@ -1089,6 +1091,43 @@ button.kpi-card:hover {
   margin-top: 0.45rem;
 }
 
+.line-pricing {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin-top: 0.45rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.line-pricing > label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-weight: 600;
+}
+
+.line-pricing input[type='number'],
+.line-pricing input[inputmode='decimal'] {
+  width: 6.5rem;
+  padding: 0.4rem 0.5rem;
+}
+
+.line-pricing .tax-toggle,
+.check-row label {
+  flex-direction: row;
+  align-items: center;
+  cursor: pointer;
+}
+
+.line-pricing input[type='checkbox'],
+.check-row input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+}
+
 .qty {
   min-width: 1.5rem;
   text-align: center;
@@ -1166,7 +1205,7 @@ button.kpi-card:hover {
 
 .pay-methods {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.45rem;
 }
 
@@ -1194,19 +1233,68 @@ button.kpi-card:hover {
   border-color: var(--accent);
 }
 
-.cart-total {
+.cart-totals {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 0.38rem;
   padding-top: 0.5rem;
   border-top: 1px dashed var(--line);
+}
+
+.cart-totals > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.88rem;
+}
+
+.cart-totals .grand-total {
+  align-items: baseline;
+  padding-top: 0.4rem;
   font-size: 1.05rem;
 }
 
-.cart-total strong {
+.cart-totals .grand-total strong {
   font-size: 1.4rem;
   font-weight: 800;
   letter-spacing: -0.02em;
+}
+
+.profit-row {
+  color: var(--green);
+}
+
+.balance-row {
+  color: var(--red);
+  font-size: 1rem !important;
+}
+
+.credit-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(234, 88, 12, 0.25);
+  border-radius: 10px;
+  background: var(--orange-soft);
+}
+
+.credit-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.credit-callout {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #9a3412;
+  font-size: 0.83rem;
+  font-weight: 600;
 }
 
 .flash-ok {
@@ -1226,6 +1314,37 @@ button.kpi-card:hover {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
+}
+
+.pricing-preview {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem 0.8rem;
+  padding: 0.7rem;
+  border-radius: 9px;
+  background: var(--bg);
+  font-size: 0.83rem;
+}
+
+.pricing-preview span {
+  color: var(--muted);
+}
+
+.pricing-preview strong {
+  text-align: right;
+}
+
+.field-warning {
+  margin: 0;
+  color: var(--red);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.check-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.2rem;
 }
 
 .stock-row {
@@ -1335,6 +1454,29 @@ button.kpi-card:hover {
   color: var(--red);
 }
 
+.status-badge {
+  display: inline-flex;
+  margin-left: 0.45rem;
+  padding: 0.16rem 0.45rem;
+  border-radius: 999px;
+  background: var(--orange-soft);
+  color: var(--orange);
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-badge.paid {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.status-badge.overdue {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
 .sale-customer,
 .sale-worker {
   margin: 0.2rem 0 0;
@@ -1364,8 +1506,99 @@ button.kpi-card:hover {
   font-weight: 600;
 }
 
-.void-btn {
+.sale-items .line-profit {
+  display: block;
+  margin-top: 0.1rem;
+  color: var(--green);
+  font-size: 0.7rem;
+  text-align: right;
+}
+
+.sale-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin-top: 0.65rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.sale-summary strong {
+  color: var(--ink);
+}
+
+.sale-actions {
+  display: flex;
+  gap: 0.45rem;
   margin-top: 0.6rem;
+}
+
+/* ---------- Customer balances ---------- */
+
+.balance-kpis {
+  max-width: 780px;
+}
+
+.balance-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.balance-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.balance-card.is-overdue {
+  border-color: rgba(220, 38, 38, 0.35);
+}
+
+.balance-main,
+.balance-progress,
+.balance-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.balance-main > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.balance-main span,
+.balance-meta,
+.balance-progress {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.balance-amount {
+  color: var(--red);
+  font-size: 1.15rem;
+}
+
+.balance-meta,
+.balance-progress {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.overdue-text {
+  color: var(--red);
+  font-weight: 700;
 }
 
 /* ---------- Modals ---------- */
@@ -1472,6 +1705,26 @@ button.kpi-card:hover {
   padding-top: 0.65rem;
   border-top: 1px solid var(--line);
   font-weight: 700;
+}
+
+.receipt-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-top: 0.55rem;
+  border-top: 1px dashed var(--line);
+}
+
+.receipt-breakdown p {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.receipt-balance {
+  color: var(--red);
 }
 
 .receipt-thanks {
@@ -1640,7 +1893,7 @@ button.kpi-card:hover {
   right: 0;
   bottom: 0;
   z-index: 40;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 0.2rem;
   padding: 0.45rem 0.6rem calc(0.45rem + env(safe-area-inset-bottom));
   background: var(--sidebar);
@@ -1767,6 +2020,10 @@ button.kpi-card:hover {
     grid-template-columns: 1fr;
   }
 
+  .balance-list {
+    grid-template-columns: 1fr;
+  }
+
   .chart-card,
   .recent-card,
   .report-items {
@@ -1779,6 +2036,19 @@ button.kpi-card:hover {
 }
 
 @media (max-width: 640px) {
+  .tab {
+    font-size: 0.58rem;
+  }
+
+  .tab svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .pay-methods {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .stock-row {
     grid-template-columns: 1fr;
     gap: 0.6rem;
