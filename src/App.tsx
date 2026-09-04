@@ -11,7 +11,7 @@ import {
   WalletCards,
   WifiOff,
   Wrench,
-  Store,
+  Users,
 } from 'lucide-react'
 import { AuthProvider, useAuth } from './auth'
 import { DashboardView } from './components/DashboardView'
@@ -22,10 +22,12 @@ import { PwaUpdatePrompt } from './components/PwaUpdatePrompt'
 import { ReportsView } from './components/ReportsView'
 import { SalesView } from './components/SalesView'
 import { SellView } from './components/SellView'
+import { Brand } from './components/Brand'
+import { TeamView } from './components/TeamView'
 import { StockView } from './components/StockView'
 import { ShopProvider, useShop } from './store'
 
-type Tab = 'dashboard' | 'sell' | 'stock' | 'sales' | 'credit' | 'reports' | 'more'
+type Tab = 'dashboard' | 'sell' | 'stock' | 'sales' | 'credit' | 'reports' | 'more' | 'team'
 
 const desktopNavItems: { id: Tab; label: string; icon: typeof Wrench }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -34,21 +36,25 @@ const desktopNavItems: { id: Tab; label: string; icon: typeof Wrench }[] = [
   { id: 'sales', label: 'Sales', icon: ClipboardList },
   { id: 'credit', label: 'Balances', icon: WalletCards },
   { id: 'reports', label: 'Reports', icon: BarChart3 },
+  { id: 'team', label: 'Staff access', icon: Users },
 ]
 
 const mobileNavItems: { id: Tab; label: string; icon: typeof Wrench }[] = [
   { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
   { id: 'sell', label: 'Checkout', icon: Wrench },
+  { id: 'credit', label: 'Balances', icon: WalletCards },
   { id: 'stock', label: 'Products', icon: Package },
   { id: 'sales', label: 'Sales', icon: ClipboardList },
   { id: 'more', label: 'More', icon: Menu },
 ]
 
 function Shell() {
-  const [tab, setTab] = useState<Tab>('dashboard')
-  const mobileTab = tab === 'credit' || tab === 'reports' ? 'more' : tab
+  const [requestedTab, setTab] = useState<Tab>('dashboard')
+  const { profile, signOut, isOwner } = useAuth()
+  const workerTabs: Tab[] = ['dashboard', 'sell', 'credit']
+  const tab = isOwner || workerTabs.includes(requestedTab) ? requestedTab : 'dashboard'
+  const mobileTab = tab === 'credit' || tab === 'reports' || tab === 'team' ? 'more' : tab
   const [showInstall, setShowInstall] = useState(shouldShowInstallPrompt)
-  const { profile, signOut } = useAuth()
   const { loading, error, offlinePending, clearError } = useShop()
 
   return (
@@ -56,14 +62,12 @@ function Shell() {
       {showInstall && <InstallPrompt onClose={() => setShowInstall(false)} />}
       <aside className="sidebar" aria-label="Main navigation">
         <div className="sidebar-brand">
-          <span className="store-monogram" aria-hidden><Store size={22} /></span>
-          <span className="brand-word">Prince</span>
-          <span className="brand-sub">Auto</span>
+          <Brand compact />
         </div>
 
-        <p className="sidebar-section-label">Store workspace</p>
+        <p className="sidebar-section-label">WORKSPACE</p>
         <nav className="side-nav">
-          {desktopNavItems.map(({ id, label, icon: Icon }) => (
+          {desktopNavItems.filter(({ id }) => isOwner || workerTabs.includes(id)).map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               type="button"
@@ -94,8 +98,7 @@ function Shell() {
       <div className="app-body">
         <header className="topbar">
           <div className="topbar-brand">
-            <span className="brand-word">Prince</span>
-            <span className="brand-sub">Auto</span>
+            <Brand compact />
           </div>
           <div className="topbar-title">
             {[...desktopNavItems, ...mobileNavItems].find((item) => item.id === tab)?.label}
@@ -150,13 +153,14 @@ function Shell() {
               {tab === 'sales' && <SalesView />}
               {tab === 'credit' && <CreditView />}
               {tab === 'reports' && <ReportsView />}
+              {tab === 'team' && isOwner && <TeamView />}
               {tab === 'more' && <MoreView onNavigate={setTab} />}
             </>
           )}
         </main>
 
         <nav className="tab-bar" aria-label="Main">
-          {mobileNavItems.map(({ id, label, icon: Icon }) => (
+          {mobileNavItems.filter(({ id }) => isOwner || workerTabs.includes(id)).map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               type="button"
@@ -175,7 +179,7 @@ function Shell() {
 }
 
 function AppGate() {
-  const { session, loading } = useAuth()
+  const { session, profile, loading, error, signOut } = useAuth()
 
   if (loading) {
     return (
@@ -192,8 +196,12 @@ function AppGate() {
     return <LoginView />
   }
 
+  if (!profile || profile.id !== session.user.id) {
+    return <div className="loading-state"><p>{error || 'Loading your access…'}</p><button onClick={() => void signOut()}>Sign out</button></div>
+  }
+
   return (
-    <ShopProvider>
+    <ShopProvider key={`${profile.id}:${profile.role}`}>
       <Shell />
     </ShopProvider>
   )

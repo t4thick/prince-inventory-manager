@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
   appId: 'com.princeauto.inventory',
-  appName: 'Prince Auto',
+  appName: 'PRINCE AMOFAH AUTOS',
   webDir: 'dist',
   server: {
     // Uncomment to load the live site instead of bundled files (updates without rebuilding):

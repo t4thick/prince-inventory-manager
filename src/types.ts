@@ -1,4 +1,4 @@
-export type PaymentMethod = 'cash' | 'card' | 'transfer' | 'credit'
+export type PaymentMethod = 'cash' | 'mobile_money' | 'card' | 'transfer' | 'credit'
 export type CollectedPaymentMethod = Exclude<PaymentMethod, 'credit'>
 export type PaymentStatus = 'paid' | 'partial' | 'unpaid' | 'voided'
 

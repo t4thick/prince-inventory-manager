@@ -1,8 +1,8 @@
-import { BarChart3, ChevronRight, LogOut, WalletCards } from 'lucide-react'
+import { BarChart3, ChevronRight, LogOut, WalletCards, Users } from 'lucide-react'
 import { useAuth } from '../auth'
 
 type Props = {
-  onNavigate: (tab: 'credit' | 'reports') => void
+  onNavigate: (tab: 'credit' | 'reports' | 'team') => void
 }
 
 export function MoreView({ onNavigate }: Props) {
@@ -12,7 +12,7 @@ export function MoreView({ onNavigate }: Props) {
     <div className="view more-view">
       <header className="view-header">
         <div>
-          <p className="eyebrow">Prince Auto</p>
+          <p className="eyebrow">PRINCE AMOFAH AUTOS</p>
           <h1>More</h1>
         </div>
       </header>
@@ -45,6 +45,10 @@ export function MoreView({ onNavigate }: Props) {
             <small>Sales, tax, costs, and profit</small>
           </span>
           <ChevronRight size={19} aria-hidden />
+        </button>
+        <button type="button" className="more-link" onClick={() => onNavigate('team')}>
+          <span className="more-link-icon is-blue"><Users size={21} /></span>
+          <span><strong>Staff access</strong><small>Create worker accounts</small></span><ChevronRight size={19} />
         </button>
       </nav>
 

@@ -5,7 +5,7 @@ import { ModalPortal } from './ModalPortal'
 import { StoreContact } from './StoreContact'
 
 const methodLabel = {
-  cash: 'Cash',
+  cash: 'Cash', mobile_money: 'Mobile Money',
   card: 'Card',
   transfer: 'Transfer',
   credit: 'Credit / Pay later',
@@ -38,7 +38,7 @@ export function ReceiptModal({ sale, onClose }: Props) {
 
         <div className="receipt-body" id="print-receipt">
           <header className="receipt-header">
-            <strong className="receipt-shop">Prince Auto</strong>
+            <img className="receipt-logo" src="/brand/prince-amofah-autos-logo.jpeg" alt="Prince Amofah Autos" />
             <StoreContact />
             <span className="document-label">Sales receipt · GHS</span>
             <span className="receipt-meta">{formatDateTime(sale.createdAt)}</span>
@@ -58,17 +58,13 @@ export function ReceiptModal({ sale, onClose }: Props) {
               <li key={item.productId}>
                 <span className="receipt-item-name">
                   <strong>{item.name}</strong>
-                  <small>{item.qty} × {money(item.price)}</small>
+                  <small>{item.qty} × {money(item.qty > 0 ? item.lineTotal / item.qty : item.price)}</small>
                 </span>
                 <span>{money(item.lineTotal)}</span>
               </li>
             ))}
           </ul>
 
-          <div className="receipt-breakdown">
-            <p><span>Subtotal</span><span>{money(sale.subtotal)}</span></p>
-            <p><span>Tax</span><span>{money(sale.taxTotal)}</span></p>
-          </div>
           <div className="receipt-total">
             <span>Total · {methodLabel[sale.paymentMethod]}</span>
             <strong>{money(sale.total)}</strong>
@@ -81,7 +77,7 @@ export function ReceiptModal({ sale, onClose }: Props) {
             </div>
           )}
 
-          <p className="receipt-thanks">Thank you for choosing Prince Auto.</p>
+          <p className="receipt-thanks">Thank you for choosing PRINCE AMOFAH AUTOS.</p>
         </div>
 
         <div className="modal-actions no-print">

@@ -1828,12 +1828,16 @@ button.kpi-card:hover {
 }
 
 .receipt-body {
+  width: 100%;
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
 }
 
 .receipt-header {
+  text-align: center;
+  align-items: center;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -3104,4 +3108,13 @@ button.kpi-card:hover {
   .no-print {
     display: none !important;
   }
+}
+
+/* Keep receipt descriptions readable and monetary columns aligned. */
+.receipt-item-name { min-width: 0; overflow-wrap: anywhere; text-align: left; }
+.receipt-lines li > span:last-child,
+.receipt-total > strong,
+.receipt-breakdown p > :last-child { flex-shrink: 0; text-align: right; font-variant-numeric: tabular-nums; }
+@media print {
+  #print-receipt { max-width: 420px; margin-inline: auto; }
 }

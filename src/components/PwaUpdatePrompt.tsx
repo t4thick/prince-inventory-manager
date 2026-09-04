@@ -22,7 +22,7 @@ export function PwaUpdatePrompt() {
       <RefreshCw size={20} aria-hidden />
       <div>
         <strong>Update available</strong>
-        <span>Refresh now to use the latest Prince Auto version.</span>
+        <span>Refresh now to use the latest PRINCE AMOFAH AUTOS version.</span>
       </div>
       <button
         type="button"

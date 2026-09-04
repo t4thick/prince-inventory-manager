@@ -1,141 +1,49 @@
 import { useState, type FormEvent } from 'react'
-import { LogIn, UserPlus } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, LockKeyhole } from 'lucide-react'
 import { useAuth } from '../auth'
+import { Brand } from './Brand'
 import { StoreContact } from './StoreContact'
 
-type Mode = 'signin' | 'signup'
-
 export function LoginView() {
-  const { signIn, signUp, error, clearError } = useAuth()
-  const [mode, setMode] = useState<Mode>('signin')
-  const [email, setEmail] = useState('')
+  const { signIn, error, clearError } = useAuth()
+  const [name, setName] = useState('')
   const [password, setPassword] = useState('')
-  const [displayName, setDisplayName] = useState('')
+  const [visible, setVisible] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [notice, setNotice] = useState<string | null>(null)
+  const [failure, setFailure] = useState('')
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     clearError()
-    setNotice(null)
+    setFailure('')
     setBusy(true)
-
-    if (mode === 'signin') {
-      await signIn(email.trim(), password)
-    } else {
-      const err = await signUp(email.trim(), password, displayName.trim())
-      if (!err) {
-        setNotice('Account created. Check your email if confirmation is required, then sign in.')
-        setMode('signin')
-      }
-    }
-
-    setBusy(false)
+    try { await signIn(name.trim(), password) }
+    catch { setFailure('Unable to sign in. Check your connection and try again.') }
+    finally { setBusy(false) }
   }
 
-  return (
-    <div className="login-screen">
-      <aside className="login-identity">
-        <div className="identity-wordmark">PRINCE AUTO<span>KUMASI · GHANA</span></div>
-        <div><p className="identity-kicker">Your store, in order.</p><h1>Every product.<br />Every sale.<br /><span>All in one place.</span></h1></div>
-        <StoreContact />
-      </aside>
-      <div className="login-card panel">
-        <div className="brand-mark login-brand">
-          <span className="brand-word">Prince</span>
-          <span className="brand-sub">Auto</span>
-        </div>
-        <h2 className="login-heading">Welcome back.</h2>
-        <p className="login-lead">Sign in to your store workspace.</p>
-
-        <div className="login-tabs" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            className={mode === 'signin' ? 'active' : ''}
-            aria-selected={mode === 'signin'}
-            onClick={() => setMode('signin')}
-          >
-            Sign in
-          </button>
-          <button
-            type="button"
-            role="tab"
-            className={mode === 'signup' ? 'active' : ''}
-            aria-selected={mode === 'signup'}
-            onClick={() => setMode('signup')}
-          >
-            Join shop
-          </button>
-        </div>
-
+  return <div className="signin-page">
+    <header className="signin-header"><Brand /><span className="private-label"><LockKeyhole size={14} /> Staff access</span></header>
+    <main className="signin-main">
+      <section className="signin-intro">
+        <p className="eyebrow">THE SHOP WORKSPACE</p>
+        <h1>A good day.<br />A shop in order.</h1>
+        <p>Sales, stock and customer accounts.<br />Everything you need for the day ahead.</p>
+        <div className="signin-index"><span>01 <strong>Serve customers</strong></span><span>02 <strong>Keep stock in check</strong></span><span>03 <strong>Know your numbers</strong></span></div>
+      </section>
+      <section className="signin-form-panel" aria-labelledby="signin-title">
+        <span className="signin-symbol"><LockKeyhole size={22} /></span>
+        <h2 id="signin-title">Sign in to the shop</h2>
+        <p>Use the account provided by your owner.</p>
         <form className="login-form" onSubmit={onSubmit}>
-          {mode === 'signup' && (
-            <label>
-              Your name
-              <input
-                required
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="e.g. Mike"
-                autoComplete="name"
-              />
-            </label>
-          )}
-          <label>
-            Email
-            <input
-              required
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@shop.com"
-              autoComplete="email"
-            />
-          </label>
-          <label>
-            Password
-            <input
-              required
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-              minLength={6}
-            />
-          </label>
-
-          {error && (
-            <p className="login-error" role="alert">
-              {error}
-            </p>
-          )}
-          {notice && (
-            <p className="login-notice" role="status">
-              {notice}
-            </p>
-          )}
-
-          <button type="submit" className="primary-btn login-submit" disabled={busy}>
-            {mode === 'signin' ? (
-              <>
-                <LogIn size={18} aria-hidden />
-                Sign in
-              </>
-            ) : (
-              <>
-                <UserPlus size={18} aria-hidden />
-                Create account
-              </>
-            )}
-          </button>
+          <label>First name<input required value={name} onChange={e => setName(e.target.value)} autoComplete="username" placeholder="First name (owner: email)" /></label>
+          <label>Password<span className="password-field"><input required type={visible ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" placeholder="Enter your password" /><button type="button" className="password-toggle" onClick={() => setVisible(!visible)} aria-label={visible ? 'Hide password' : 'Show password'}>{visible ? <EyeOff size={18} /> : <Eye size={18} />}</button></span></label>
+          {(error || failure) && <p className="login-error" role="alert">{error || failure}</p>}
+          <button type="submit" className="primary-btn login-submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}<ArrowRight size={18} /></button>
         </form>
-
-        <p className="login-foot">
-          First account becomes <strong>owner</strong>. Later accounts are <strong>workers</strong>.
-        </p>
-      </div>
-    </div>
-  )
+        <p className="signin-help">Need an account or help signing in?<br /><strong>Speak to the shop owner.</strong></p>
+      </section>
+    </main>
+    <footer className="signin-footer"><StoreContact /><span>PRINCE AMOFAH AUTOS</span></footer>
+  </div>
 }

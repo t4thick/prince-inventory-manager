@@ -117,11 +117,11 @@ export function StockView() {
 
     if (
       !name ||
-      Number.isNaN(costPrice) ||
+      (!Number.isFinite(costPrice)) ||
       costPrice < 0 ||
-      Number.isNaN(price) ||
+      (!Number.isFinite(price)) ||
       price < 0 ||
-      Number.isNaN(taxRate) ||
+      (!Number.isFinite(taxRate)) ||
       taxRate < 0 ||
       taxRate > 1
     ) return
@@ -286,7 +286,7 @@ export function StockView() {
       {open && isOwner && (
         <ModalPortal onClose={closeForm}>
           <form
-            className="modal panel"
+            className="modal panel product-modal"
             onSubmit={onSubmit}
             role="dialog"
             aria-modal="true"
@@ -363,7 +363,7 @@ export function StockView() {
                   />
                 </label>
                 <label>
-                  Selling price (GH₵)
+                  Base selling price (GH₵)
                   <input
                     required
                     inputMode="decimal"
@@ -386,10 +386,21 @@ export function StockView() {
                   />
                 </label>
               </div>
+              <section className="owner-tax-settings" aria-label="Owner tax settings">
+                <label className="owner-tax-switch">
+                  <input type="checkbox" checked={draft.taxable} onChange={(e) => setDraft((d) => ({ ...d, taxable: e.target.checked }))} />
+                  Include tax in customer price
+                </label>
+                <label>
+                  Your tax rate (%)
+                  <input type="number" min="0" max="100" step="any" inputMode="decimal" value={draft.taxRate} disabled={!draft.taxable} onChange={(e) => setDraft((d) => ({ ...d, taxRate: e.target.value }))} />
+                </label>
+                <p className="field-help">Set your own rate, or switch it off. Only you see the breakdown. Customers see one final price.</p>
+              </section>
               <div className="pricing-preview">
                 <span>Profit per unit</span>
                 <strong>{money(Math.max(0, Number(draft.price) || 0) - Math.max(0, Number(draft.costPrice) || 0))}</strong>
-                <span>Customer price with tax</span>
+                <span>Final customer price</span>
                 <strong>
                   {money(
                     (Number(draft.price) || 0) *
@@ -400,7 +411,7 @@ export function StockView() {
               {Number(draft.price) < Number(draft.costPrice) && (
                 <p className="field-warning">Warning: selling price is below cost.</p>
               )}
-              <h3 className="form-section-title">Stock alerts &amp; tax</h3>
+              <h3 className="form-section-title">Stock alerts &amp; codes</h3>
               <div className="form-row">
                 <label>
                   Low stock at
@@ -428,26 +439,9 @@ export function StockView() {
                     placeholder="Optional"
                   />
                 </label>
-                <label>
-                  Tax rate %
-                  <input
-                    inputMode="decimal"
-                    value={draft.taxRate}
-                    disabled={!draft.taxable}
-                    onChange={(e) => setDraft((d) => ({ ...d, taxRate: e.target.value }))}
-                  />
-                </label>
+
               </div>
-              <div className="check-row">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={draft.taxable}
-                    onChange={(e) => setDraft((d) => ({ ...d, taxable: e.target.checked }))}
-                  />
-                  Taxable by default
-                </label>
-              </div>
+
             </div>
 
             <div className="modal-actions">

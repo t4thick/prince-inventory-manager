@@ -15,9 +15,9 @@ export default defineConfig({
         'icon-512.png',
       ],
       manifest: {
-        name: 'Prince Auto',
-        short_name: 'Prince Auto',
-        description: 'Product sales, checkout & shared inventory for Prince Auto.',
+        name: 'PRINCE AMOFAH AUTOS',
+        short_name: 'PRINCE AMOFAH AUTOS',
+        description: 'Product sales, checkout & shared inventory for PRINCE AMOFAH AUTOS.',
         theme_color: '#1c2430',
         background_color: '#f4f5f7',
         display: 'standalone',

@@ -9,6 +9,7 @@ import {
 } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase, supabaseConfigured } from './lib/supabase'
+import { staffEmailForName } from './lib/staff-login'
 import type { Profile, UserRole } from './types'
 
 type AuthContextValue = {
@@ -17,8 +18,7 @@ type AuthContextValue = {
   loading: boolean
   error: string | null
   isOwner: boolean
-  signIn: (email: string, password: string) => Promise<string | null>
-  signUp: (email: string, password: string, displayName: string) => Promise<string | null>
+  signIn: (nameOrEmail: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
   clearError: () => void
 }
@@ -112,24 +112,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       error,
       isOwner: profile?.role === 'owner',
       clearError: () => setError(null),
-      signIn: async (email, password) => {
+      signIn: async (nameOrEmail, password) => {
         if (!supabase) return 'Supabase is not configured.'
         setError(null)
+        const email = staffEmailForName(nameOrEmail)
         const { error: err } = await supabase.auth.signInWithPassword({ email, password })
-        if (err) {
-          setError(err.message)
-          return err.message
-        }
-        return null
-      },
-      signUp: async (email, password, displayName) => {
-        if (!supabase) return 'Supabase is not configured.'
-        setError(null)
-        const { error: err } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { display_name: displayName.trim() } },
-        })
         if (err) {
           setError(err.message)
           return err.message

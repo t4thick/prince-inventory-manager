@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Printer, RotateCcw } from 'lucide-react'
 import { formatDateTime, money, todayKey } from '../lib/format'
-import { useAuth } from '../auth'
 import { useShop } from '../store'
 import type { Sale } from '../types'
 import { ReceiptModal } from './ReceiptModal'
 
 const methodLabel = {
-  cash: 'Cash',
+  cash: 'Cash', mobile_money: 'Mobile Money',
   card: 'Card',
   transfer: 'Transfer',
   credit: 'Credit',
@@ -74,7 +73,6 @@ function SaleList({
   onReceipt: (sale: Sale) => void
 }) {
   const { voidSale, isOwner } = useShop()
-  const { session } = useAuth()
   const [busyId, setBusyId] = useState<string | null>(null)
 
   async function onVoid(sale: Sale) {
@@ -86,8 +84,7 @@ function SaleList({
 
   const canVoid = (sale: Sale) => {
     if (sale.voidedAt) return false
-    if (isOwner) return true
-    return sale.workerId === session?.user.id
+    return isOwner
   }
 
   return (

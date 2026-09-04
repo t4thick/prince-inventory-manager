@@ -508,6 +508,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       isOwner,
       clearError: () => setError(null),
       setStock: async (id, stock, expectedStock) => {
+        if (!isOwner) { setError('Only the owner can perform this action.'); return false }
         if (!supabase) return false
         const { error: err } = await supabase.rpc('set_product_stock', {
           p_id: id, p_stock: stock, p_expected_stock: expectedStock,
@@ -577,6 +578,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         }
       },
       adjustStock: (id, delta, reason = 'Manual adjustment') => {
+        if (!isOwner) { setError('Only the owner can adjust stock.'); return }
         void supabase?.rpc('adjust_product_stock', {
           p_id: id,
           p_delta: delta,
@@ -603,9 +605,23 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         })
       },
       checkout: async (items, paymentMethod, details) => {
-        if (!session?.user || !profile) return null
+        if (!session?.user || !profile || profile.id !== session.user.id) return null
+        if (paymentMethod !== 'cash' && paymentMethod !== 'mobile_money' && paymentMethod !== 'credit') {
+          setError('Choose Cash, Mobile Money or Pay later.'); return null
+        }
+        if (!isOwner) items = items.map((line) => {
+          const product = products.find((p) => p.id === line.productId)
+          return { ...line, unitPrice: product?.price ?? 0, applyTax: product?.taxable ?? false, overrideReason: '' }
+        })
+        if (paymentMethod === 'credit') {
+          if (!isOnline()) { setError('Connect to the internet before saving a pay-later sale.'); return null }
+          if (!details.customerName.trim() || !details.customerPhone.trim()) { setError('Pay later requires a customer name and phone number.'); return null }
+          if (!Number.isFinite(details.amountPaid) || details.amountPaid < 0) { setError('Enter a valid amount paid.'); return null }
+          if (details.initialPaymentMethod !== 'cash' && details.initialPaymentMethod !== 'mobile_money') { setError('Choose Cash or Mobile Money for the amount paid now.'); return null }
+        }
         const sale = buildSale(products, items, paymentMethod, session.user.id, profile.displayName, details)
         if (!sale) return null
+        if (paymentMethod === 'credit' && details.amountPaid > sale.total) { setError('Amount paid cannot exceed the total.'); return null }
 
         const ok = await submitSale(sale, items, details)
         if (!ok) {
@@ -632,6 +648,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         return true
       },
       voidSale: async (saleId) => {
+        if (!isOwner) { setError('Only the owner can perform this action.'); return false }
         if (!supabase) return false
         const { error: err } = await supabase.rpc('void_sale', { p_sale_id: saleId })
         if (err) {

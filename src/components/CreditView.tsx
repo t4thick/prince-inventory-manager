@@ -201,8 +201,7 @@ export function CreditView() {
                   onChange={(event) => setMethod(event.target.value as CollectedPaymentMethod)}
                 >
                   <option value="cash">Cash</option>
-                  <option value="card">Card</option>
-                  <option value="transfer">Transfer</option>
+                  <option value="mobile_money">Mobile Money</option>
                 </select>
               </label>
               <label>
@@ -244,7 +243,7 @@ export function CreditView() {
             </div>
             <div id="print-statement" className="statement-sheet">
               <header className="statement-head">
-                <div><strong>Prince Auto</strong><StoreContact /><span>Customer account statement</span></div>
+                <div><strong>PRINCE AMOFAH AUTOS</strong><StoreContact /><span>Customer account statement</span></div>
                 <div><span>Statement date</span><strong>{new Date().toLocaleDateString()}</strong></div>
               </header>
               <div className="statement-customer">

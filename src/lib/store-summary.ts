@@ -17,7 +17,7 @@ export function summarizeStore(products: Product[], sales: Sale[], payments: Pay
       item.qty += line.qty; item.total += line.lineTotal; sold.set(line.productId, item)
     }
   }
-  const byMethod = { cash: 0, card: 0, transfer: 0 }
+  const byMethod = { cash: 0, mobile_money: 0, card: 0, transfer: 0 }
   for (const payment of payments) {
     if (!payment.reversedAt && todayKey(new Date(payment.createdAt)) === today) byMethod[payment.paymentMethod] += payment.amount
   }

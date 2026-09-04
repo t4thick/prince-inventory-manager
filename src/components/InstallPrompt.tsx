@@ -60,7 +60,7 @@ export function InstallPrompt({ onClose }: Props) {
         <Share size={22} />
       </div>
       <h2 id="install-title">Install on iPhone</h2>
-      <p id="install-description">Add Prince Auto to your Home Screen — opens full-screen like a native app.</p>
+      <p id="install-description">Add PRINCE AMOFAH AUTOS to your Home Screen — opens full-screen like a native app.</p>
       <ol className="install-steps">
         <li>
           Tap <strong>Share</strong> <Share size={14} aria-hidden className="inline-icon" /> in Safari

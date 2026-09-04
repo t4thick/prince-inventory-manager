@@ -16,7 +16,7 @@ const ranges: { id: Range; label: string }[] = [
   { id: 'all', label: 'All time' },
 ]
 
-const methodLabel = { cash: 'Cash', card: 'Card', transfer: 'Transfer', credit: 'Credit' } as const
+const methodLabel = { cash: 'Cash', mobile_money: 'Mobile Money', card: 'Card', transfer: 'Transfer', credit: 'Credit' } as const
 
 export function ReportsView() {
   const { sales, payments, isOwner } = useShop()

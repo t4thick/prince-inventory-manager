@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Banknote, CreditCard, Minus, Plus, Search, Smartphone, Trash2, WalletCards } from 'lucide-react'
+import { Banknote, Minus, Plus, Search, Smartphone, Trash2, WalletCards } from 'lucide-react'
 import { calculateLine, calculateSaleTotals } from '../lib/finance'
 import { money } from '../lib/format'
 import { isOnline } from '../lib/offline'
@@ -9,8 +9,7 @@ import { ReceiptModal } from './ReceiptModal'
 
 const methods: { id: PaymentMethod; label: string; icon: typeof Banknote }[] = [
   { id: 'cash', label: 'Cash', icon: Banknote },
-  { id: 'card', label: 'Card', icon: CreditCard },
-  { id: 'transfer', label: 'Transfer', icon: Smartphone },
+  { id: 'mobile_money', label: 'Mobile Money', icon: Smartphone },
   { id: 'credit', label: 'Pay later', icon: WalletCards },
 ]
 
@@ -25,7 +24,7 @@ export function SellView() {
   const [dueDate, setDueDate] = useState('')
   const [notes, setNotes] = useState('')
   const [amountPaid, setAmountPaid] = useState('0')
-  const [initialMethod, setInitialMethod] = useState<'cash' | 'card' | 'transfer'>('cash')
+  const [initialMethod, setInitialMethod] = useState<'cash' | 'mobile_money'>('cash')
   const [flash, setFlash] = useState<string | null>(null)
   const [receipt, setReceipt] = useState<Sale | null>(null)
   const [paying, setPaying] = useState(false)
@@ -136,7 +135,7 @@ export function SellView() {
         return
       }
       const paid = Number(amountPaid)
-      if (Number.isNaN(paid) || paid < 0 || paid > total) {
+      if (!Number.isFinite(paid) || paid < 0 || paid > total) {
         setFlash('Enter a valid amount paid, no more than the total.')
         return
       }
@@ -147,10 +146,10 @@ export function SellView() {
       customerName,
       customerPhone,
       vehicleInfo: '',
-      dueDate: dueDate || null,
-      notes,
+      dueDate: method === 'credit' ? dueDate || null : null,
+      notes: method === 'credit' ? notes : '',
       amountPaid: method === 'credit' ? Number(amountPaid) : total,
-      initialPaymentMethod: initialMethod,
+      initialPaymentMethod: method === 'credit' ? initialMethod : method === 'mobile_money' ? 'mobile_money' : 'cash',
     })
     setPaying(false)
     if (!sale) return
@@ -159,15 +158,15 @@ export function SellView() {
     setCustomerId(null)
     setCustomerName('')
     setCustomerPhone('')
-    setDueDate('')
-    setNotes('')
-    setAmountPaid('0')
+    setDueDate(''); setNotes(''); setAmountPaid('0'); setInitialMethod('cash')
     setReceipt(sale)
 
-    if (!isOnline()) {
+    if (method === 'credit') {
+      setFlash(`Sale saved · ${money(sale.balanceDue)} remaining to pay`)
+    } else if (!isOnline()) {
       setFlash(`Saved offline (${offlinePending + 1} pending) · will sync when back online`)
     } else {
-      setFlash(`Paid ${money(sale.total)} · parts updated`)
+      setFlash(`Paid ${money(sale.total)} · stock updated`)
     }
   }
 
@@ -175,7 +174,7 @@ export function SellView() {
     <div className="view sell-view">
       <header className="view-header">
         <div>
-          <p className="eyebrow">Front desk</p>
+          <p className="eyebrow">COUNTER</p>
           <h1>Checkout</h1>
         </div>
       </header>
@@ -213,7 +212,7 @@ export function SellView() {
                   disabled={out}
                 >
                   <span className="tile-name">{product.name}</span>
-                  <span className="tile-price">{money(product.price)}</span>
+                  <span className="tile-price">{money(calculateLine({ unitPrice: product.price, unitCost: 0, quantity: 1, applyTax: product.taxable, taxRate: product.taxRate }).total)}</span>
                   <span className={`tile-stock ${low ? 'is-low' : ''}`}>
                     {isLabor ? 'Labor' : out ? 'Out' : `${product.stock} in stock`}
                     {inCart > 0 ? ` · ${inCart} in cart` : ''}
@@ -222,15 +221,15 @@ export function SellView() {
               )
             })}
             {filtered.length === 0 && (
-              <div className="retail-empty"><h2>{products.length ? 'No matching products' : 'Ready when your products are'}</h2><p>{products.length ? 'Try searching by product name or SKU.' : 'Add products in the Products tab to start selling.'}</p></div>
+              <div className="retail-empty"><h2>{products.length ? 'No matching products' : 'Ready when your products are'}</h2><p>{products.length ? 'Try searching by product name or SKU.' : isOwner ? 'Add products in the Products tab to start selling.' : 'Ask the owner to add products before checkout.'}</p></div>
             )}
           </div>
         </section>
 
         <aside className="cart panel" aria-label="Cart">
           <div className="cart-head">
-            <h2>Cart</h2>
-            <span>{itemCount} line items</span>
+            <h2>Current sale</h2>
+            <span>{itemCount} items</span>
           </div>
 
           <div className="job-fields">
@@ -256,7 +255,7 @@ export function SellView() {
                 inputMode="tel"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="Required for credit"
+                placeholder="Phone (optional)"
               />
             </label>
           </div>
@@ -294,18 +293,19 @@ export function SellView() {
                       />
                     </label>
                   ) : (
-                    <span>{money(line.unitPrice)} each</span>
+                    <span>{money(calculateLine({ unitPrice: line.unitPrice, unitCost: 0, quantity: 1, applyTax: line.applyTax, taxRate: line.product.taxRate }).total)} each</span>
                   )}
-                  <label className="tax-toggle">
+                  {isOwner && <label className="tax-toggle">
                     <input
                       type="checkbox"
                       checked={line.applyTax}
+                      disabled={!isOwner}
                       onChange={(event) =>
                         updateCartLine(line.productId, { applyTax: event.target.checked })
                       }
                     />
-                    Tax {Math.round(line.product.taxRate * 100)}%
-                  </label>
+                    Tax {Math.round(line.product.taxRate * 100)}% · included in final price
+                  </label>}
                 </div>
                 <div className="line-controls">
                   <button
@@ -380,12 +380,12 @@ export function SellView() {
                     value={initialMethod}
                     disabled={Number(amountPaid) <= 0}
                     onChange={(event) =>
-                      setInitialMethod(event.target.value as 'cash' | 'card' | 'transfer')
+                      setInitialMethod(event.target.value as 'cash' | 'mobile_money')
                     }
                   >
                     <option value="cash">Cash</option>
-                    <option value="card">Card</option>
-                    <option value="transfer">Transfer</option>
+
+                    <option value="mobile_money">Mobile Money</option>
                   </select>
                 </label>
               </div>
@@ -410,19 +410,20 @@ export function SellView() {
             </div>
           )}
 
+
+          <p className="payment-confirmation">{method === 'credit' ? 'Any unpaid amount is saved to the customer’s balance.' : 'Confirm payment has been received before completing the sale.'}</p>
+
           <div className="cart-totals">
-            <div><span>Subtotal</span><strong>{money(subtotal)}</strong></div>
-            <div><span>Tax</span><strong>{money(taxTotal)}</strong></div>
+            {isOwner && <>
+              <div><span>Base amount</span><strong>{money(subtotal)}</strong></div>
+              <div><span>Tax included · owner only</span><strong>{money(taxTotal)}</strong></div>
+            </>}
             {isOwner && (
               <div className="profit-row"><span>Projected gross profit</span><strong>{money(projectedProfit)}</strong></div>
             )}
             <div className="grand-total"><span>Total</span><strong>{money(total)}</strong></div>
-            {method === 'credit' && (
-              <div className="balance-row">
-                <span>Balance due</span>
-                <strong>{money(Math.max(0, total - (Number(amountPaid) || 0)))}</strong>
-              </div>
-            )}
+            {method === 'credit' && <div className="balance-row"><span>Balance due</span><strong>{money(Math.max(0, total - (Number(amountPaid) || 0)))}</strong></div>}
+
           </div>
 
           <button
@@ -431,7 +432,7 @@ export function SellView() {
             disabled={detailed.length === 0 || paying}
             onClick={takePayment}
           >
-            {paying ? 'Processing…' : method === 'credit' ? 'Save credit sale' : 'Take payment'}
+            {paying ? 'Saving…' : method === 'credit' ? 'Save pay-later sale' : 'Complete sale'}
           </button>
 
           {flash && (
