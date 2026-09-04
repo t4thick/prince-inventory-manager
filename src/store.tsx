@@ -625,7 +625,6 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
         const ok = await submitSale(sale, items, details)
         if (!ok) {
-          await refresh()
           return null
         }
 

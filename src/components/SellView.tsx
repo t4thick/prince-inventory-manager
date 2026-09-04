@@ -366,7 +366,7 @@ export function SellView() {
               </div>
               <div className="form-row">
                 <label>
-                  Paid now
+                  Paid now (optional)
                   <input
                     inputMode="decimal"
                     value={amountPaid}
@@ -378,13 +378,11 @@ export function SellView() {
                   Paid by
                   <select
                     value={initialMethod}
-                    disabled={Number(amountPaid) <= 0}
                     onChange={(event) =>
                       setInitialMethod(event.target.value as 'cash' | 'mobile_money')
                     }
                   >
                     <option value="cash">Cash</option>
-
                     <option value="mobile_money">Mobile Money</option>
                   </select>
                 </label>

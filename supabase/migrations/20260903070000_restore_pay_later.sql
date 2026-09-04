@@ -72,10 +72,6 @@ begin
     return jsonb_build_object('ok', true, 'duplicate', true, 'id', p_id);
   end if;
 
-  if p_customer_id is not null and not public.is_owner() then
-    raise exception 'Only the owner can access customer accounts';
-  end if;
-
   if p_customer_id is not null then
     select * into resolved_customer from public.customers where id = p_customer_id;
     if not found then raise exception 'Customer not found'; end if;
@@ -89,7 +85,7 @@ begin
     if resolved_customer.id is null then
       raise exception 'Customer is required for credit';
     end if;
-    if trim(resolved_customer.phone) = '' and trim(coalesce(p_vehicle_info, resolved_customer.vehicle_info)) = '' then
+    if trim(coalesce(nullif(p_customer_phone, ''), resolved_customer.phone, '')) = '' and trim(coalesce(nullif(p_vehicle_info, ''), resolved_customer.vehicle_info, '')) = '' then
       raise exception 'Phone or vehicle is required for credit';
     end if;
   end if;
