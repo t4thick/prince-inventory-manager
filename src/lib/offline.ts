@@ -1,5 +1,5 @@
 // New queue namespace after the user-authorized client handover reset.
-const QUEUE_KEY = 'prince-offline-sales-handover-v1'
+const QUEUE_KEY = 'prince-offline-sales-blank-slate-v2'
 
 export type OfflineSalePayload = {
   p_id: string
