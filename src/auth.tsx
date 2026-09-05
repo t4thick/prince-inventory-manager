@@ -19,6 +19,7 @@ type AuthContextValue = {
   error: string | null
   isOwner: boolean
   signIn: (nameOrEmail: string, password: string) => Promise<string | null>
+  updateDisplayName: (name: string) => Promise<string | null>
   signOut: () => Promise<void>
   clearError: () => void
 }
@@ -121,6 +122,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setError(err.message)
           return err.message
         }
+        return null
+      },
+      updateDisplayName: async (name) => {
+        if (!supabase || !session?.user || profile?.role !== 'owner') return 'Only the owner can change this name.'
+        const displayName = name.trim()
+        if (displayName.length < 2 || displayName.length > 60) return 'Enter a name between 2 and 60 characters.'
+        const { error: err } = await supabase
+          .from('profiles')
+          .update({ display_name: displayName })
+          .eq('id', session.user.id)
+        if (err) return err.message
+        setProfile(current => current ? { ...current, displayName } : current)
         return null
       },
       signOut: async () => {

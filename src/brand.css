@@ -154,6 +154,7 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .signin-footer { display: flex; justify-content: space-between; gap: 20px; align-items: center; border-top: 1px solid var(--line); padding: 22px 0; font-size: .75rem; color: #718097; }
 .signin-footer .store-contact { text-align: left; font-size: .75rem; margin: 0; }
 .team-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(300px,380px); gap: 20px; align-items: start; }
+.team-column { display: grid; gap: 20px; min-width: 0; }
 .team-list { list-style: none; padding: 0; margin: 0; }
 .team-list li { display: flex; align-items: center; gap: 12px; padding: 15px 0; border-bottom: 1px solid var(--line); }
 .team-list li:last-child { border-bottom: 0; }

@@ -7,6 +7,7 @@ const auth = vi.hoisted(() => ({
   session: { user: { id: 'worker' } } as { user: { id: string } } | null,
   profile: { id: 'worker', displayName: 'Worker', role: 'worker', createdAt: '' } as Profile | null,
   isOwner: false, loading: false, error: null, signOut: vi.fn(),
+  updateDisplayName: vi.fn(),
 }))
 const rpc = vi.hoisted(() => vi.fn())
 vi.mock('./auth', () => ({ useAuth: () => auth, AuthProvider: ({ children }: { children: ReactNode }) => children }))

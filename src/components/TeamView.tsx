@@ -1,18 +1,22 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { ShieldCheck, UserPlus } from 'lucide-react'
+import { Pencil, ShieldCheck, UserPlus } from 'lucide-react'
 import { useAuth } from '../auth'
 import { supabase } from '../lib/supabase'
 
 type Member = { id: string; display_name: string; role: string }
 
 export function TeamView() {
-  const { isOwner } = useAuth()
+  const { isOwner, profile, updateDisplayName } = useAuth()
   const [members, setMembers] = useState<Member[]>([])
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [ownerName, setOwnerName] = useState(profile?.displayName ?? '')
+  const [nameBusy, setNameBusy] = useState(false)
+  const [nameError, setNameError] = useState('')
+  const [nameNotice, setNameNotice] = useState('')
 
   useEffect(() => {
     if (!isOwner || !supabase) return
@@ -48,13 +52,38 @@ export function TeamView() {
     finally { setBusy(false) }
   }
 
+  async function saveOwnerName(event: FormEvent) {
+    event.preventDefault()
+    if (nameBusy) return
+    setNameBusy(true); setNameError(''); setNameNotice('')
+    const nextName = ownerName.trim()
+    const updateError = await updateDisplayName(nextName)
+    if (updateError) setNameError(updateError)
+    else {
+      setOwnerName(nextName)
+      setMembers(previous => previous.map(member => member.id === profile?.id ? { ...member, display_name: nextName } : member))
+      setNameNotice('Owner name updated.')
+    }
+    setNameBusy(false)
+  }
+
   return <div className="view">
     <header className="view-header"><div><p className="eyebrow">OWNER CONTROLS</p><h1>Staff access</h1><p className="page-description">The right access for the people behind your counter.</p></div></header>
     <div className="team-layout">
+      <div className="team-column">
       <section className="card"><div className="card-head"><h2>Your team</h2><ShieldCheck size={19} color="var(--accent)" /></div>
         <ul className="team-list">{members.map(member => <li key={member.id}><span className="user-avatar" aria-hidden>{member.display_name.slice(0,1).toUpperCase()}</span><div className="team-person"><strong>{member.display_name}</strong><small>{member.role === 'owner' ? 'Full shop access' : 'Checkout, own daily revenue and customer balances'}</small></div><span className={`role-pill ${member.role}`}>{member.role}</span></li>)}</ul>
         <p className="team-note">Workers can sell, use Pay Later, record customer payments, print receipts and see their own daily revenue. Products, profit reports and staff settings stay with the owner.</p>
       </section>
+      <section className="card"><div className="card-head"><h2>Change owner name</h2><Pencil size={19} /></div>
+        <form className="login-form" onSubmit={saveOwnerName}>
+          <label>Owner name<input required minLength={2} maxLength={60} autoComplete="name" value={ownerName} onChange={event => setOwnerName(event.target.value)} /></label>
+          {nameError && <p role="alert" className="login-error">{nameError}</p>}
+          {nameNotice && <p role="status" className="flash-ok">{nameNotice}</p>}
+          <button className="primary-btn" disabled={nameBusy || ownerName.trim() === profile?.displayName}>{nameBusy ? 'Saving…' : 'Save owner name'}</button>
+        </form>
+      </section>
+      </div>
       <section className="card"><div className="card-head"><h2>Create worker account</h2><UserPlus size={19} /></div>
         <form className="login-form" onSubmit={createWorker}>
           <label>First name<input required minLength={2} maxLength={40} pattern="[A-Za-z][A-Za-z'-]*" autoComplete="off" value={name} onChange={e => setName(e.target.value)} placeholder="For example, Kofi" /><small className="team-note">This becomes the worker’s sign-in name. Each first name must be unique.</small></label>
