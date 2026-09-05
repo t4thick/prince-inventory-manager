@@ -1834,6 +1834,7 @@ button.kpi-card:focus-visible { outline: 3px solid color-mix(in srgb, var(--acce
 
 .receipt-body {
   width: 100%;
+  max-width: 340px;
   margin-inline: auto;
   display: flex;
   flex-direction: column;
