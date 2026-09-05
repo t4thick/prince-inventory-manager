@@ -2,7 +2,7 @@
 begin;
 
 alter policy "sales read" on public.sales using (
-  public.is_owner() or worker_id = auth.uid() or balance_due > 0
+  public.is_owner() or worker_id = auth.uid() or payment_method = 'credit'
 );
 alter policy "customers members read" on public.customers using (
   public.is_authenticated_member()
