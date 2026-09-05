@@ -1829,7 +1829,7 @@ button.kpi-card:focus-visible { outline: 3px solid color-mix(in srgb, var(--acce
 /* ---------- Receipt ---------- */
 
 .receipt-modal {
-  max-width: 420px;
+  max-width: 360px;
 }
 
 .receipt-body {
@@ -3121,5 +3121,5 @@ button.kpi-card:focus-visible { outline: 3px solid color-mix(in srgb, var(--acce
 .receipt-total > strong,
 .receipt-breakdown p > :last-child { flex-shrink: 0; text-align: right; font-variant-numeric: tabular-nums; }
 @media print {
-  #print-receipt { max-width: 420px; margin-inline: auto; }
+  #print-receipt { width: 320px; max-width: 100%; margin-inline: auto; padding: 0.65rem; }
 }

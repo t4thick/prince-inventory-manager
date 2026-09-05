@@ -38,7 +38,7 @@ export function ReceiptModal({ sale, onClose }: Props) {
 
         <div className="receipt-body" id="print-receipt">
           <header className="receipt-header">
-            <img className="receipt-logo" src="/brand/prince-amofah-autos-logo.jpeg" alt="Prince Amofah Autos" />
+            <img className="receipt-logo" src="/brand/prince-amofah-autos-receipt.png" alt="Prince Amofah Autos" />
             <StoreContact />
             <span className="document-label">Sales receipt · GHS</span>
             <span className="receipt-meta">{formatDateTime(sale.createdAt)}</span>

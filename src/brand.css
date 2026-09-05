@@ -124,7 +124,7 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .offline-banner { background: var(--orange-soft); color: #805718; }
 .modal input, .modal select { min-height: 44px; }
 .receipt-shop { font-size: 1.15rem; letter-spacing: .035em; }
-.receipt-logo { display: block; width: min(130px, 42%); height: auto; margin: 0 auto 6px; object-fit: contain; }
+.receipt-logo { display: block; width: min(180px, 58%); height: auto; margin: 0 auto 4px; object-fit: contain; }
 .receipt-body { color: #202020; }
 .receipt-header .store-contact { color: #525252; }
 
@@ -176,7 +176,7 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
  .receipt-modal { border-radius: 0; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
-@media print { .receipt-body, .receipt-shop, .receipt-meta, .receipt-header .store-contact { color: #000; } .receipt-shop { font-family: Arial,sans-serif; } .receipt-logo { width: 115px; margin-inline: auto; print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+@media print { .receipt-body, .receipt-shop, .receipt-meta, .receipt-header .store-contact { color: #000; } .receipt-shop { font-family: Arial,sans-serif; } .receipt-logo { width: 150px; margin-inline: auto; print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
 
 /* Form children must shrink within their grid tracks on every viewport. */
 .modal, .modal-content, .form-row, .modal label, .job-fields, .job-fields label,
