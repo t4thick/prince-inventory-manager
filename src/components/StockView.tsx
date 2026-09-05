@@ -340,7 +340,11 @@ export function StockView() {
               </section>
               <div className="pricing-preview">
                 <span>Profit per unit</span>
-                <strong>{money(Math.max(0, Number(draft.price) || 0) - Math.max(0, Number(draft.costPrice) || 0))}</strong>
+                <strong>{money(
+                  (Number(draft.price) || 0) *
+                    (draft.taxable ? 1 + (Number(draft.taxRate) || 0) / 100 : 1) -
+                    Math.max(0, Number(draft.costPrice) || 0),
+                )}</strong>
                 <span>Final customer price</span>
                 <strong>
                   {money(
@@ -349,7 +353,7 @@ export function StockView() {
                   )}
                 </strong>
               </div>
-              {Number(draft.price) < Number(draft.costPrice) && (
+              {(Number(draft.price) || 0) * (draft.taxable ? 1 + (Number(draft.taxRate) || 0) / 100 : 1) < Number(draft.costPrice) && (
                 <p className="field-warning">Warning: selling price is below cost.</p>
               )}
               <h3 className="form-section-title">Stock alerts &amp; codes</h3>

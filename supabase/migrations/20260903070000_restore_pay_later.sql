@@ -189,7 +189,7 @@ begin
     ) values (
       p_id, product_row.id, line_no, product_row.name, product_row.sku, requested_qty,
       effective_price, effective_cost, requested_tax, effective_tax_rate, line_subtotal,
-      line_tax, line_total, line_cost, line_subtotal - line_cost,
+      line_tax, line_total, line_cost, line_total - line_cost,
       requested_price is not null and requested_price <> product_row.price,
       requested_tax <> product_row.taxable,
       trim(coalesce(line->>'overrideReason', '')), product_row.is_labor
@@ -222,7 +222,7 @@ begin
   where id = p_id;
 
   insert into public.sale_financials (sale_id, cost_total, gross_profit)
-  values (p_id, cost_value, subtotal_value - cost_value);
+  values (p_id, cost_value, total_value - cost_value);
 
   if paid_value > 0 then
     insert into public.payments (

@@ -32,7 +32,7 @@ export function calculateLine(input: FinancialLineInput): FinancialLineResult {
     tax,
     total: roundMoney(subtotal + tax),
     cost,
-    grossProfit: roundMoney(subtotal - cost),
+    grossProfit: roundMoney(subtotal + tax - cost),
   }
 }
 

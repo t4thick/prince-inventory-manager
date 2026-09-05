@@ -23,7 +23,7 @@ describe('financial calculations', () => {
       tax: 16,
       total: 96,
       cost: 50,
-      grossProfit: 30,
+      grossProfit: 46,
     })
     expect(exempt.tax).toBe(0)
     expect(calculateSaleTotals([taxable, exempt])).toEqual({
@@ -31,11 +31,11 @@ describe('financial calculations', () => {
       tax: 16,
       total: 136,
       cost: 60,
-      grossProfit: 60,
+      grossProfit: 76,
     })
   })
 
-  it('excludes tax from gross profit', () => {
+  it('calculates profit from the final customer price including tax', () => {
     const result = calculateLine({
       unitPrice: 12.5,
       unitCost: 7,
@@ -46,7 +46,7 @@ describe('financial calculations', () => {
 
     expect(result.tax).toBe(5)
     expect(result.total).toBe(30)
-    expect(result.grossProfit).toBe(11)
+    expect(result.grossProfit).toBe(16)
   })
 
   it('rounds currency at the line level', () => {
