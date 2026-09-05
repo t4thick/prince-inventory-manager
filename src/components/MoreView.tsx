@@ -48,7 +48,7 @@ export function MoreView({ onNavigate }: Props) {
         </button>
         <button type="button" className="more-link" onClick={() => onNavigate('team')}>
           <span className="more-link-icon is-blue"><Users size={21} /></span>
-          <span><strong>Staff access</strong><small>Create worker accounts</small></span><ChevronRight size={19} />
+          <span><strong>Staff access</strong><small>Manage worker accounts</small></span><ChevronRight size={19} />
         </button>
       </nav>
 

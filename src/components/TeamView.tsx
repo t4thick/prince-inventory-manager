@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Pencil, ShieldCheck, UserPlus } from 'lucide-react'
+import { KeyRound, Pencil, ShieldCheck, Trash2, UserPlus, X } from 'lucide-react'
 import { useAuth } from '../auth'
 import { supabase } from '../lib/supabase'
 
@@ -17,6 +17,10 @@ export function TeamView() {
   const [nameBusy, setNameBusy] = useState(false)
   const [nameError, setNameError] = useState('')
   const [nameNotice, setNameNotice] = useState('')
+  const [deletingId, setDeletingId] = useState('')
+  const [resetMember, setResetMember] = useState<Member | null>(null)
+  const [resetPassword, setResetPassword] = useState('')
+  const [resetBusy, setResetBusy] = useState(false)
 
   useEffect(() => {
     if (!isOwner || !supabase) return
@@ -67,13 +71,50 @@ export function TeamView() {
     setNameBusy(false)
   }
 
+  async function deleteWorker(member: Member) {
+    if (!supabase || deletingId || member.role !== 'worker') return
+    if (!confirm(`Delete ${member.display_name}'s worker account? They will no longer be able to sign in. Their previous sales and receipts will be kept.`)) return
+    setDeletingId(member.id); setError(''); setNotice('')
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-worker', { body: { workerId: member.id } })
+      if (error) {
+        const response = 'context' in error ? error.context : null
+        const details = response instanceof Response ? await response.json().catch(() => null) : null
+        throw new Error(details?.error || 'Unable to remove this worker. Please try again.')
+      }
+      if (!data?.success) throw new Error('The account service did not confirm removal.')
+      setMembers(previous => previous.filter(item => item.id !== member.id))
+      setNotice(`${member.display_name}'s worker account was deleted. Previous sales and receipts were kept.`)
+    } catch (deleteError) { setError(deleteError instanceof Error ? deleteError.message : 'Unable to remove this worker.') }
+    finally { setDeletingId('') }
+  }
+
+  async function resetWorkerPassword(event: FormEvent) {
+    event.preventDefault()
+    if (!supabase || !resetMember || resetBusy) return
+    setResetBusy(true); setError(''); setNotice('')
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-worker-password', { body: { workerId: resetMember.id, password: resetPassword } })
+      if (error) {
+        const response = 'context' in error ? error.context : null
+        const details = response instanceof Response ? await response.json().catch(() => null) : null
+        throw new Error(details?.error || 'Unable to reset this password.')
+      }
+      if (!data?.success) throw new Error('The account service did not confirm the password reset.')
+      setNotice(`${resetMember.display_name}'s password was reset. Give them the new password privately.`)
+      setResetMember(null); setResetPassword('')
+    } catch (resetError) { setError(resetError instanceof Error ? resetError.message : 'Unable to reset this password.') }
+    finally { setResetBusy(false) }
+  }
+
   return <div className="view">
     <header className="view-header"><div><p className="eyebrow">OWNER CONTROLS</p><h1>Staff access</h1><p className="page-description">The right access for the people behind your counter.</p></div></header>
     <div className="team-layout">
       <div className="team-column">
       <section className="card"><div className="card-head"><h2>Your team</h2><ShieldCheck size={19} color="var(--accent)" /></div>
-        <ul className="team-list">{members.map(member => <li key={member.id}><span className="user-avatar" aria-hidden>{member.display_name.slice(0,1).toUpperCase()}</span><div className="team-person"><strong>{member.display_name}</strong><small>{member.role === 'owner' ? 'Full shop access' : 'Checkout, own daily revenue and customer balances'}</small></div><span className={`role-pill ${member.role}`}>{member.role}</span></li>)}</ul>
+        <ul className="team-list">{members.map(member => <li key={member.id}><span className="user-avatar" aria-hidden>{member.display_name.slice(0,1).toUpperCase()}</span><div className="team-person"><strong>{member.display_name}</strong><small>{member.role === 'owner' ? 'Full shop access' : 'Checkout, own daily revenue and customer balances'}</small></div><span className={`role-pill ${member.role}`}>{member.role}</span>{member.role === 'worker' && <div className="team-actions"><button type="button" className="icon-btn" onClick={() => { setResetMember(member); setResetPassword(''); setError(''); setNotice('') }} aria-label={`Reset ${member.display_name}'s password`} title="Reset password"><KeyRound size={17} /></button><button type="button" className="icon-btn danger" disabled={deletingId === member.id} onClick={() => void deleteWorker(member)} aria-label={`Delete ${member.display_name}'s worker account`} title="Delete worker account"><Trash2 size={17} /></button></div>}</li>)}</ul>
         <p className="team-note">Workers can sell, use Pay Later, record customer payments, print receipts and see their own daily revenue. Products, profit reports and staff settings stay with the owner.</p>
+        {resetMember && <form className="login-form team-reset" onSubmit={resetWorkerPassword}><div className="card-head"><h3>Reset {resetMember.display_name}'s password</h3><button type="button" className="icon-btn" onClick={() => { setResetMember(null); setResetPassword('') }} aria-label="Cancel password reset"><X size={17} /></button></div><label>New password<input required type="password" minLength={12} maxLength={128} autoComplete="new-password" value={resetPassword} onChange={event => setResetPassword(event.target.value)} /><small className="team-note">Use at least 12 characters.</small></label><button className="primary-btn" disabled={resetBusy}>{resetBusy ? 'Resetting…' : 'Reset password'}</button></form>}
       </section>
       <section className="card"><div className="card-head"><h2>Change owner name</h2><Pencil size={19} /></div>
         <form className="login-form" onSubmit={saveOwnerName}>

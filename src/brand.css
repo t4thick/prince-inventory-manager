@@ -160,6 +160,8 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .team-list li:last-child { border-bottom: 0; }
 .team-person { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: .875rem; }
 .team-person small { display: block; color: var(--muted); font-size: .75rem; margin-top: 3px; }
+.team-actions { display: flex; gap: 6px; }
+.team-reset { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
 .team-note { color: var(--muted); font-size: .875rem; line-height: 1.7; }
 @media (max-width: 1200px) { .retail-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); } .sell-grid { grid-template-columns: minmax(0,1fr) 350px; } }
 @media (max-width: 1023px) { .app-frame { display: block; } .main-stage { padding: 22px 22px 100px; } .sidebar { display: none; } .topbar { height: 70px; padding: 0 20px; } .topbar .brand-emblem { width: 34px; height: 34px; font-size: 14px; } .topbar .brand-name { font-size: .75rem; max-width: 135px; } .topbar .brand-name small { font-size: .75rem; } .topbar .shop-brand { gap: 8px; } .topbar-title { display: none; } }
