@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useRef, useState, type FormEvent } from 'react'
 import { Banknote, FileText, Printer, Search, WalletCards, X } from 'lucide-react'
 import { formatDateTime, money } from '../lib/format'
 import { useShop } from '../store'
@@ -15,6 +15,8 @@ export function CreditView() {
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [statementSale, setStatementSale] = useState<Sale | null>(null)
+  const [view, setView] = useState<'outstanding' | 'open' | 'overdue'>('open')
+  const resultsRef = useRef<HTMLDivElement>(null)
 
   const statementSales = useMemo(() => {
     if (!statementSale) return []
@@ -32,10 +34,11 @@ export function CreditView() {
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
   const statementBalance = statementSales.reduce((sum, sale) => sum + sale.balanceDue, 0)
 
+  const allBalances = useMemo(() => sales.filter((sale) => !sale.voidedAt && sale.balanceDue > 0), [sales])
   const balances = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    return sales
-      .filter((sale) => !sale.voidedAt && sale.balanceDue > 0)
+    return allBalances
+      .filter((sale) => view !== 'overdue' || Boolean(sale.dueDate && new Date(`${sale.dueDate}T23:59:59`) < new Date()))
       .filter((sale) => {
         if (!needle) return true
         return [
@@ -45,16 +48,26 @@ export function CreditView() {
         ].some((value) => value.toLowerCase().includes(needle))
       })
       .sort((a, b) => {
+        if (view === 'outstanding') return b.balanceDue - a.balanceDue
         const aOverdue = a.dueDate && new Date(`${a.dueDate}T23:59:59`) < new Date() ? 0 : 1
         const bOverdue = b.dueDate && new Date(`${b.dueDate}T23:59:59`) < new Date() ? 0 : 1
         return aOverdue - bOverdue || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       })
-  }, [sales, query])
+  }, [allBalances, query, view])
 
-  const totalOutstanding = balances.reduce((sum, sale) => sum + sale.balanceDue, 0)
-  const overdue = balances.filter(
+  const totalOutstanding = allBalances.reduce((sum, sale) => sum + sale.balanceDue, 0)
+  const overdue = allBalances.filter(
     (sale) => sale.dueDate && new Date(`${sale.dueDate}T23:59:59`) < new Date(),
   ).length
+
+  function showView(next: 'outstanding' | 'open' | 'overdue') {
+    setView(next)
+    setQuery('')
+    requestAnimationFrame(() => {
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      resultsRef.current?.focus({ preventScroll: true })
+    })
+  }
 
   function openPayment(sale: Sale) {
     setSelected(sale)
@@ -90,26 +103,26 @@ export function CreditView() {
       </header>
 
       <div className="kpi-grid balance-kpis">
-        <div className="kpi-card">
+        <button type="button" className={`kpi-card ${view === 'outstanding' ? 'is-selected' : ''}`} aria-pressed={view === 'outstanding'} onClick={() => showView('outstanding')}>
           <span className="kpi-icon is-orange"><WalletCards size={20} aria-hidden /></span>
           <div className="kpi-body">
             <span className="kpi-label">Outstanding</span>
             <strong className="kpi-value">{money(totalOutstanding)}</strong>
           </div>
-        </div>
-        <div className="kpi-card">
+        </button>
+        <button type="button" className={`kpi-card ${view === 'open' ? 'is-selected' : ''}`} aria-pressed={view === 'open'} onClick={() => showView('open')}>
           <span className="kpi-icon is-blue"><Banknote size={20} aria-hidden /></span>
           <div className="kpi-body">
             <span className="kpi-label">Open sales</span>
-            <strong className="kpi-value">{balances.length}</strong>
+            <strong className="kpi-value">{allBalances.length}</strong>
           </div>
-        </div>
-        <div className={`kpi-card ${overdue > 0 ? 'kpi-alert' : ''}`}>
+        </button>
+        <button type="button" className={`kpi-card ${overdue > 0 ? 'kpi-alert' : ''} ${view === 'overdue' ? 'is-selected' : ''}`} aria-pressed={view === 'overdue'} onClick={() => showView('overdue')}>
           <div className="kpi-body">
             <span className="kpi-label">Overdue</span>
             <strong className="kpi-value">{overdue}</strong>
           </div>
-        </div>
+        </button>
       </div>
 
       <div className="search-row panel-search">
@@ -122,9 +135,10 @@ export function CreditView() {
         />
       </div>
 
+      <div ref={resultsRef} className="balance-results" tabIndex={-1} role="region" aria-label={`${view === 'overdue' ? 'Overdue' : view === 'outstanding' ? 'Outstanding balances' : 'Open sales'} results`}>
       {balances.length === 0 ? (
         <div className="empty-note panel">
-          {query ? 'No balances match that search.' : 'No outstanding customer balances.'}
+          {query ? 'No balances match that search.' : view === 'overdue' ? 'No overdue customer balances.' : 'No outstanding customer balances.'}
         </div>
       ) : (
         <ul className="balance-list">
@@ -165,6 +179,7 @@ export function CreditView() {
           })}
         </ul>
       )}
+      </div>
 
       {selected && (
         <ModalPortal onClose={closePayment}>

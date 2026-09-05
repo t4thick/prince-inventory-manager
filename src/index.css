@@ -444,6 +444,11 @@ button.kpi-card:hover {
   border-color: #c9ccd1;
 }
 
+button.kpi-card { cursor: pointer; font: inherit; }
+button.kpi-card.is-selected { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent); }
+button.kpi-card:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent); outline-offset: 2px; }
+.balance-results:focus { outline: none; }
+
 .kpi-card.kpi-alert {
   border-color: rgba(210, 60, 42, 0.35);
 }
