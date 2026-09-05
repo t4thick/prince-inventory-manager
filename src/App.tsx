@@ -53,7 +53,7 @@ function Shell() {
   const { profile, signOut, isOwner } = useAuth()
   const workerTabs: Tab[] = ['dashboard', 'sell', 'credit']
   const tab = isOwner || workerTabs.includes(requestedTab) ? requestedTab : 'dashboard'
-  const mobileTab = tab === 'credit' || tab === 'reports' || tab === 'team' ? 'more' : tab
+  const mobileTab = tab === 'reports' || tab === 'team' ? 'more' : tab
   const [showInstall, setShowInstall] = useState(shouldShowInstallPrompt)
   const { loading, error, offlinePending, clearError } = useShop()
 
