@@ -1,5 +1,5 @@
 import { Printer, X } from 'lucide-react'
-import { formatDateTime, money } from '../lib/format'
+import { money } from '../lib/format'
 import type { Sale } from '../types'
 import { ModalPortal } from './ModalPortal'
 import { StoreContact } from './StoreContact'
@@ -38,20 +38,19 @@ export function ReceiptModal({ sale, onClose }: Props) {
 
         <div className="receipt-body" id="print-receipt">
           <header className="receipt-header">
-            <img className="receipt-logo" src="/brand/prince-amofah-autos-receipt.png" alt="Prince Amofah Autos" />
+            <img className="receipt-logo" src="/brand/maa-thess-receipt.jpeg" alt="MAA THESS Memorial Enterprise" width="1280" height="562" />
             <StoreContact />
             <span className="document-label">Sales receipt · GHS</span>
-            <span className="receipt-meta">{formatDateTime(sale.createdAt)}</span>
-            <span className="receipt-meta">{sale.receiptNumber}</span>
           </header>
-
-          {sale.customerName && (
-            <div className="receipt-customer">
-              {sale.customerName && <p>Customer: {sale.customerName}</p>}
-            </div>
-          )}
-
-          <p className="receipt-worker">Sold by: {sale.workerName}</p>
+          <dl className="receipt-details">
+            <div><dt>Receipt no.</dt><dd>{sale.receiptNumber}</dd></div>
+            <div><dt>Date</dt><dd>{new Date(sale.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</dd></div>
+            <div><dt>Customer</dt><dd>{sale.customerName || 'Walk-in customer'}</dd></div>
+            <div><dt>Sold by</dt><dd>{sale.workerName || 'Shop staff'}</dd></div>
+            <div><dt>Payment</dt><dd>{methodLabel[sale.paymentMethod]}</dd></div>
+          </dl>
+          {sale.voidedAt && <p className="receipt-voided">VOIDED RECEIPT</p>}
+          <div className="receipt-column-head"><span>Item / Qty × unit price</span><span>Amount</span></div>
 
           <ul className="receipt-lines">
             {sale.items.map((item) => (
@@ -66,7 +65,7 @@ export function ReceiptModal({ sale, onClose }: Props) {
           </ul>
 
           <div className="receipt-total">
-            <span>Total · {methodLabel[sale.paymentMethod]}</span>
+            <span>Total (GHS)</span>
             <strong>{money(sale.total)}</strong>
           </div>
           {sale.paymentMethod === 'credit' && (
@@ -77,7 +76,11 @@ export function ReceiptModal({ sale, onClose }: Props) {
             </div>
           )}
 
-          <p className="receipt-thanks">Thank you for choosing PRINCE AMOFAH AUTOS.</p>
+          <footer className="receipt-footer">
+            <p className="receipt-thanks">Thank you for shopping with us.</p>
+            <p>MAA THESS Memorial Enterprise</p>
+            <p>Please keep this receipt for your records.</p>
+          </footer>
         </div>
 
         <div className="modal-actions no-print">

@@ -207,6 +207,61 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
   .modal-actions > button { min-width: 0; white-space: normal; }
 }
 .pay-methods > .method:last-child:nth-child(3) { grid-column: 1 / -1; }
+/* Consistent touch targets, keyboard focus, and resilient compact layouts. */
+button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.icon-btn { min-width: 40px; min-height: 40px; }
+.team-actions { flex-shrink: 0; }
+.team-list li { flex-wrap: wrap; }
+.team-person { flex-basis: 120px; }
+.retail-metric > strong, .kpi-value, .cart-totals, .stock-price { font-variant-numeric: tabular-nums; }
+.view-header > div, .card-head > h2, .mobile-account > div { min-width: 0; }
+.side-user-name, .user-name, .mobile-account strong { overflow-wrap: anywhere; }
+.tab { min-width: 0; white-space: nowrap; }
+@media (max-width: 380px) {
+  .tab { font-size: 10px; padding-inline: 2px; }
+  .team-list li > .role-pill { font-size: 10px; }
+  .team-actions { margin-left: auto; }
+}
+
+/* Receipt: compact paper, distinct metadata, aligned amounts. */
+.receipt-modal { width: min(100%, 380px); max-width: 380px; }
+.receipt-body { width: 100%; max-width: 304px; gap: 14px; font-family: Arial, sans-serif; color: #18212d; }
+.receipt-header { gap: 6px; }
+.receipt-header .receipt-logo { width: 240px; max-width: 88%; height: auto; margin: 0 auto; }
+.receipt-header .store-contact { font-family: inherit; font-size: 11px; line-height: 1.5; margin: 0; }
+.receipt-header .document-label { margin-top: 6px; font-size: 10px; letter-spacing: .14em; color: #18212d; }
+.receipt-details { margin: 0; padding-block: 12px; border-block: 1px dashed #bbc2ca; display: grid; gap: 6px; font-size: 11px; }
+.receipt-details > div { display: grid; grid-template-columns: 66px minmax(0,1fr); gap: 10px; }
+.receipt-details dt { color: #56606d; }
+.receipt-details dd { margin: 0; text-align: right; overflow-wrap: anywhere; font-weight: 600; }
+.receipt-column-head { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; color: #56606d; }
+.receipt-lines { padding: 0; border-top: 0; gap: 0; }
+.receipt-lines li { font-size: 12px; padding: 10px 0; border-bottom: 1px solid #edf0f3; align-items: baseline; }
+.receipt-item-name { gap: 4px; }
+.receipt-item-name strong { font-weight: 600; }
+.receipt-item-name small { font-size: 11px; color: #56606d; }
+.receipt-total { padding-top: 12px; border-top: 2px solid #18212d; font-size: 13px; gap: 12px; }
+.receipt-total strong { font-size: 19px; letter-spacing: -.04em; }
+.receipt-breakdown { gap: 8px; padding-top: 12px; }
+.receipt-breakdown p { font-size: 12px; }
+.receipt-footer { text-align: center; padding-top: 14px; border-top: 1px dashed #bbc2ca; color: #56606d; font-size: 10px; line-height: 1.6; }
+.receipt-footer p { margin: 0; }
+.receipt-footer .receipt-thanks { color: #18212d; font-weight: 700; font-size: 12px; margin-bottom: 4px; }
+.receipt-voided { margin: 0; padding: 8px; border: 2px solid currentColor; color: #a32b2b; text-align: center; font-weight: 700; }
+@media (max-width: 760px) {
+  .receipt-modal { width: 100%; max-width: none; }
+  .receipt-body { padding-block: 20px; }
+}
+@media print {
+  body:has(#print-receipt) { position: static !important; overflow: visible !important; }
+  body:has(#print-receipt) #root { display: none !important; }
+  .receipt-backdrop { display: block !important; padding: 0 !important; }
+  .receipt-modal { display: block !important; width: 100% !important; max-width: none !important; padding: 0 !important; margin: 0 !important; border: 0 !important; }
+  #print-receipt { position: static !important; width: 72mm; max-width: 100%; padding: 2mm; margin: 0 auto; gap: 10px; color: #000; }
+  #print-receipt .receipt-logo { width: 58mm; max-width: 90%; }
+  .receipt-header, .receipt-details, .receipt-total, .receipt-breakdown, .receipt-footer { break-inside: avoid; }
+  .receipt-details dt, .receipt-item-name small, .receipt-column-head, .receipt-footer, .receipt-header .store-contact { color: #000; }
+}
 .credit-fields, .credit-fields label { min-width: 0; max-width: 100%; }
 .credit-fields input, .credit-fields select { width: 100%; min-width: 0; max-width: 100%; }
 @media (max-width: 600px) { .credit-fields .form-row { grid-template-columns: minmax(0,1fr); } }
