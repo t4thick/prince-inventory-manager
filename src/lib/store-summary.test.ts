@@ -1,10 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import { summarizeStore } from './store-summary'
-import type { Payment, Sale } from '../types'
+import { summarizeInventory, summarizeStore } from './store-summary'
+import type { Payment, Product, Sale } from '../types'
 
 const now = new Date(2026, 8, 3, 12)
 const earlier = new Date(2026, 8, 2, 12).toISOString()
 describe('store summary', () => {
+  it('values inventory using final tax-inclusive customer prices', () => {
+    const product = {
+      id:'taxed', name:'Coolant', price:100, costPrice:60, taxable:true, taxRate:.2,
+      isLabor:false, barcode:'', category:'', brand:'', unit:'Each', shelfLocation:'',
+      stock:3, lowStockAt:3, sku:'CL-1', createdAt:now.toISOString(), updatedAt:now.toISOString(),
+    } satisfies Product
+    const result = summarizeInventory([product, { ...product, id:'service', isLabor:true, stock:0 }])
+    expect(result).toMatchObject({
+      products: 2, stockedProducts: 1, services: 1, units: 3,
+      costValue: 180, salesValue: 360, expectedProfit: 180,
+      lowStock: 1, outOfStock: 0,
+    })
+  })
   it('shows a genuinely empty store, with no demo revenue or stock', () => {
     const result = summarizeStore([], [], [], now)
     expect(result.salesToday).toBe(0)

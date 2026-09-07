@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { Minus, PackagePlus, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { money, percent } from '../lib/format'
+import { finalCustomerPrice, summarizeInventory } from '../lib/store-summary'
 import { useShop } from '../store'
 import type { Product } from '../types'
 import { ModalPortal } from './ModalPortal'
@@ -55,6 +56,7 @@ export function StockView() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [open, setOpen] = useState(false)
+  const summary = useMemo(() => summarizeInventory(products), [products])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -174,6 +176,30 @@ export function StockView() {
         <p className="role-note panel">Workers can adjust stock counts. Only the owner can add, edit, or remove parts.</p>
       )}
 
+      {isOwner && (
+        <section className="inventory-summary" aria-labelledby="inventory-summary-title">
+          <div className="inventory-summary-head">
+            <div><p className="eyebrow">AT A GLANCE</p><h2 id="inventory-summary-title">Inventory summary</h2></div>
+            <p>Current stock · selling value includes tax</p>
+          </div>
+          <div className="inventory-summary-grid">
+            <button type="button" className={`inventory-stat ${stockFilter === 'all' ? 'is-selected' : ''}`} onClick={() => setStockFilter('all')}>
+              <span>Products</span><strong>{summary.products}</strong><small>{summary.stockedProducts} stocked · {summary.services} services</small>
+            </button>
+            <div className="inventory-stat"><span>Units on hand</span><strong>{summary.units}</strong><small>Physical stock available</small></div>
+            <div className="inventory-stat"><span>Stock cost</span><strong>{money(summary.costValue)}</strong><small>Money invested in stock</small></div>
+            <div className="inventory-stat"><span>Selling value</span><strong>{money(summary.salesValue)}</strong><small>Value at customer prices</small></div>
+            <div className="inventory-stat is-profit"><span>Expected profit</span><strong>{money(summary.expectedProfit)}</strong><small>If current stock is sold</small></div>
+            <button type="button" className={`inventory-stat ${summary.lowStock ? 'needs-attention' : ''} ${stockFilter === 'low' ? 'is-selected' : ''}`} onClick={() => setStockFilter('low')}>
+              <span>Low stock</span><strong>{summary.lowStock}</strong><small>Tap to review</small>
+            </button>
+            <button type="button" className={`inventory-stat ${summary.outOfStock ? 'needs-attention' : ''} ${stockFilter === 'out' ? 'is-selected' : ''}`} onClick={() => setStockFilter('out')}>
+              <span>Out of stock</span><strong>{summary.outOfStock}</strong><small>Tap to review</small>
+            </button>
+          </div>
+        </section>
+      )}
+
       <div className="inventory-toolbar">
       <div className="search-row panel-search">
         <Search size={18} aria-hidden />
@@ -200,12 +226,12 @@ export function StockView() {
             <li key={product.id} className={`stock-row ${low ? 'is-low' : ''}`}>
               <div className="stock-info">
                 <strong>{product.name}</strong>
-                <div className="product-price-line"><strong>{money(product.price)}</strong><span>{product.sku}</span></div>
+                <div className="product-price-line"><strong>{money(finalCustomerPrice(product))}</strong><span>{product.sku}</span></div>
                 <div className="product-tags">
                   {low && <span className="stock-warning">{out ? 'Out of stock' : 'Low stock'}</span>}
                 </div>
                 <span className="meta product-financials">
-                  {isOwner && <>Cost {money(product.costPrice)} · Profit {money(product.price - product.costPrice)} · </>}
+                  {isOwner && <>Cost {money(product.costPrice)} · Profit {money(finalCustomerPrice(product) - product.costPrice)} · </>}
                   {product.taxable ? `${percent(product.taxRate)} tax` : 'No tax'}
                 </span>
               </div>

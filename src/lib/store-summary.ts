@@ -1,5 +1,49 @@
 import type { Payment, Product, Sale } from '../types'
+import { calculateLine, roundMoney } from './finance'
 import { todayKey } from './format'
+
+export function finalCustomerPrice(product: Pick<Product, 'price' | 'taxable' | 'taxRate'>) {
+  return calculateLine({
+    unitPrice: product.price,
+    unitCost: 0,
+    quantity: 1,
+    applyTax: product.taxable,
+    taxRate: product.taxRate,
+  }).total
+}
+
+export function summarizeInventory(products: Product[]) {
+  const stockProducts = products.filter((product) => !product.isLabor)
+  const totals = stockProducts.reduce(
+    (summary, product) => {
+      const quantity = Math.max(0, product.stock)
+      const value = calculateLine({
+        unitPrice: product.price,
+        unitCost: product.costPrice,
+        quantity,
+        applyTax: product.taxable,
+        taxRate: product.taxRate,
+      })
+      summary.units += quantity
+      summary.costValue = roundMoney(summary.costValue + value.cost)
+      summary.salesValue = roundMoney(summary.salesValue + value.total)
+      summary.expectedProfit = roundMoney(summary.expectedProfit + value.grossProfit)
+      return summary
+    },
+    { units: 0, costValue: 0, salesValue: 0, expectedProfit: 0 },
+  )
+  const lowStock = stockProducts.filter((product) => product.stock > 0 && product.stock <= product.lowStockAt)
+  const outOfStock = stockProducts.filter((product) => product.stock <= 0)
+  return {
+    ...totals,
+    products: products.length,
+    stockedProducts: stockProducts.length,
+    services: products.length - stockProducts.length,
+    lowStock: lowStock.length,
+    outOfStock: outOfStock.length,
+    needsAttention: lowStock.length + outOfStock.length,
+  }
+}
 
 export function summarizeStore(products: Product[], sales: Sale[], payments: Payment[], now = new Date()) {
   const today = todayKey(now)
