@@ -51,6 +51,7 @@ export function StockView() {
   const { products, addProduct, updateProduct, adjustStock, setStock, deleteProduct, isOwner } = useShop()
   const [originalStock, setOriginalStock] = useState(0)
   const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState('')
   const [query, setQuery] = useState('')
   const [stockFilter, setStockFilter] = useState('all')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -77,6 +78,7 @@ export function StockView() {
     if (!isOwner) return
     setEditingId(null)
     setDraft(emptyDraft)
+    setFormError('')
     setOpen(true)
   }
 
@@ -84,6 +86,7 @@ export function StockView() {
     if (!isOwner) return
     setEditingId(product.id)
     setDraft(toDraft(product))
+    setFormError('')
     setOriginalStock(product.stock)
     setOpen(true)
   }
@@ -92,6 +95,7 @@ export function StockView() {
     setOpen(false)
     setEditingId(null)
     setDraft(emptyDraft)
+    setFormError('')
   }
 
   async function onSubmit(e: FormEvent) {
@@ -103,7 +107,8 @@ export function StockView() {
     const taxRate = Number(draft.taxRate) / 100
     const stock = Math.max(0, Math.floor(Number(draft.stock) || 0))
     const lowStockAt = Math.max(0, Math.floor(Number(draft.lowStockAt) || 0))
-    const sku = draft.sku.trim().toUpperCase() || 'SKU'
+    const sku = draft.sku.trim().toUpperCase()
+    const barcode = draft.barcode.trim()
 
     if (
       !name ||
@@ -117,6 +122,17 @@ export function StockView() {
     ) return
 
     if (!Number.isSafeInteger(Number(draft.stock)) || Number(draft.stock) < 0) return
+    const duplicateSku = sku && products.some((product) => product.id !== editingId && product.sku.trim().toUpperCase() === sku)
+    if (duplicateSku) {
+      setFormError('That Part # is already used. Enter a different Part # or leave it blank.')
+      return
+    }
+    const duplicateBarcode = barcode && products.some((product) => product.id !== editingId && product.barcode.trim() === barcode)
+    if (duplicateBarcode) {
+      setFormError('That barcode is already used by another product.')
+      return
+    }
+    setFormError('')
     if (editingId && stock !== originalStock) {
       setSaving(true)
       try {
@@ -131,27 +147,39 @@ export function StockView() {
         taxable: draft.taxable,
         taxRate,
         isLabor: draft.isLabor,
-        barcode: draft.barcode.trim(),
+        barcode,
         lowStockAt,
         sku,
       })
     } else {
-      addProduct({
-        name,
-        costPrice,
-        price,
-        taxable: draft.taxable,
-        taxRate,
-        isLabor: draft.isLabor,
-        barcode: draft.barcode.trim(),
-        category: '',
-        brand: '',
-        unit: 'Each',
-        shelfLocation: '',
-        stock: draft.isLabor ? 0 : stock,
-        lowStockAt,
-        sku,
-      })
+      setSaving(true)
+      try {
+        const error = await addProduct({
+          name,
+          costPrice,
+          price,
+          taxable: draft.taxable,
+          taxRate,
+          isLabor: draft.isLabor,
+          barcode,
+          category: '',
+          brand: '',
+          unit: 'Each',
+          shelfLocation: '',
+          stock: draft.isLabor ? 0 : stock,
+          lowStockAt,
+          sku,
+        })
+        if (error) {
+          setFormError(error)
+          return
+        }
+      } catch {
+        setFormError('The product could not be saved. Check your connection and try again.')
+        return
+      } finally {
+        setSaving(false)
+      }
     }
     closeForm()
   }
@@ -416,6 +444,7 @@ export function StockView() {
             </div>
 
             <div className="modal-actions">
+              {formError && <p className="form-save-error" role="alert">{formError}</p>}
               <button type="button" className="ghost-btn" onClick={closeForm}>
                 Cancel
               </button>

@@ -218,6 +218,13 @@ button.inventory-stat:hover { border-color: #9ab8e2; background: #f8fbff; }
 .field-help { grid-column: 1 / -1; margin: 0; font-size: .8125rem; color: var(--muted); line-height: 1.6; }
 .line-pricing { flex-wrap: wrap; }
 .modal-actions { flex-wrap: wrap; }
+.form-save-error {
+  flex: 1 0 100%;
+  margin: 0;
+  color: var(--red);
+  font-size: .88rem;
+  font-weight: 700;
+}
 @media (max-width: 600px) {
   .product-modal { width: 100%; }
   .product-modal .form-row { grid-template-columns: minmax(0,1fr); }

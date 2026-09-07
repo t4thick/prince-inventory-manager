@@ -3,6 +3,7 @@ import { useAuth } from './auth'
 import { uid } from './lib/format'
 import { calculateLine, calculateSaleTotals } from './lib/finance'
 import { drainOfflineQueue, enqueueOfflineSale, isOnline, pendingOfflineCount } from './lib/offline'
+import { friendlyShopError, isJwtClockSkewError } from './lib/shop-errors'
 import { supabase } from './lib/supabase'
 import type {
   CartLine,
@@ -300,7 +301,7 @@ type ShopContextValue = {
   error: string | null
   offlinePending: number
   isOwner: boolean
-  addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => void
+  addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string | null>
   updateProduct: (id: string, patch: Partial<Omit<Product, 'id' | 'createdAt'>>) => void
   adjustStock: (id: string, delta: number, reason?: string) => void
   setStock: (id: string, stock: number, expectedStock: number) => Promise<boolean>
@@ -347,12 +348,12 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     ])
 
     if (productRes.error) {
-      setError(productRes.error.message)
+      setError(friendlyShopError(productRes.error))
       setLoading(false)
       return
     }
     if (saleRes.error) {
-      setError(saleRes.error.message)
+      setError(friendlyShopError(saleRes.error))
       setLoading(false)
       return
     }
@@ -364,12 +365,14 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       lineFinancialRes.error
     ) {
       setError(
-        customerRes.error?.message ??
-          paymentRes.error?.message ??
-          costRes.error?.message ??
-          financialRes.error?.message ??
-          lineFinancialRes.error?.message ??
-          'Unable to load financial data.',
+        friendlyShopError(
+          customerRes.error ??
+            paymentRes.error ??
+            costRes.error ??
+            financialRes.error ??
+            lineFinancialRes.error ??
+            'Unable to load financial data.',
+        ),
       )
       setLoading(false)
       return
@@ -517,28 +520,43 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         await refresh()
         return true
       },
-      addProduct: (input) => {
+      addProduct: async (input) => {
         if (!isOwner) {
           setError('Only the owner can add parts.')
-          return
+          return 'Only the owner can add parts.'
         }
+        if (!supabase) return 'The database is not connected.'
         const now = new Date().toISOString()
         const product: Product = { ...input, id: uid('p'), createdAt: now, updatedAt: now }
         setProducts((prev) => [product, ...prev])
-        void supabase?.from('products').insert(productToRow(product)).then(async ({ error: err }) => {
-          if (err) {
-            setError(err.message)
-            void refresh()
-            return
-          }
-          const { error: costError } = await supabase
-            ?.from('product_costs')
-            .upsert({ product_id: product.id, cost_price: product.costPrice }) ?? { error: null }
-          if (costError) {
-            setError(costError.message)
-            void refresh()
-          }
-        })
+        let { error: insertError } = await supabase.from('products').insert(productToRow(product))
+
+        // A newly refreshed Supabase token can briefly arrive ahead of another
+        // service's clock. Refresh once and retry so the user does not lose the form.
+        if (insertError && isJwtClockSkewError(insertError)) {
+          await new Promise((resolve) => window.setTimeout(resolve, 1500))
+          await supabase.auth.refreshSession()
+          ;({ error: insertError } = await supabase.from('products').insert(productToRow(product)))
+        }
+
+        if (insertError) {
+          const message = friendlyShopError(insertError)
+          setError(message)
+          await refresh()
+          return message
+        }
+
+        const { error: costError } = await supabase
+          .from('product_costs')
+          .upsert({ product_id: product.id, cost_price: product.costPrice })
+        if (costError) {
+          const message = friendlyShopError(costError)
+          setError(message)
+          await refresh()
+          return message
+        }
+        setError(null)
+        return null
       },
       updateProduct: (id, patch) => {
         if (!isOwner) {
